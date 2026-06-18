@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Cầu thang số - Học cộng số</title>
+  <style>
+    :root {
+      --bg-1: #fff7d7;
+      --bg-2: #d8f4ff;
+      --panel: rgba(255, 255, 255, 0.88);
+      --text: #263238;
+      --muted: #607d8b;
+      --primary: #ff8a3d;
+      --primary-dark: #d65f16;
+      --good: #18a558;
+      --shadow: rgba(43, 36, 20, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Comic Sans MS", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      color: var(--text);
+      touch-action: none;
+      user-select: none;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #scene {
+      position: absolute;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hud {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 14px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      pointer-events: none;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 22px;
+      box-shadow: 0 18px 36px rgba(43, 36, 20, 0.16), inset 0 1px 0 rgba(255,255,255,0.45);
+      backdrop-filter: blur(14px);
+      pointer-events: auto;
+    }
+
+    .title-panel {
+      padding: 14px 18px;
+    }
+
+    .title-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 32px);
+      line-height: 1.05;
+      color: #4e342e;
+    }
+
+    .level-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff0c8;
+      color: #7a4c00;
+      font-weight: 800;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: clamp(13px, 1.6vw, 16px);
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .equation-panel {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .equation-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .equation {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 950;
+      color: #37474f;
+    }
+
+    .math-box {
+      min-width: 44px;
+      padding: 6px 12px;
+      text-align: center;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 3px solid #ffe082;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.06);
+    }
+
+    .math-box.result {
+      border-color: #90caf9;
+      min-width: 54px;
+    }
+
+    .action-panel {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      align-content: center;
+      min-width: 220px;
+    }
+
+    .action-buttons,
+    .toggle-buttons {
+      display: grid;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      color: #4e342e;
+      background: linear-gradient(180deg, #fffaf0, #ffe29c);
+      box-shadow: 0 6px 0 #d5aa4d, 0 12px 18px var(--shadow);
+      font-size: 13px;
+      padding: 10px 12px;
+    }
+
+    .toggle-btn:active {
+      box-shadow: 0 2px 0 #d5aa4d, 0 7px 12px var(--shadow);
+    }
+
+    .toggle-btn.toggle-off {
+      color: #37474f;
+      background: linear-gradient(180deg, #eceff1, #b0bec5);
+      box-shadow: 0 6px 0 #78909c, 0 12px 18px var(--shadow);
+    }
+
+    .toggle-btn.toggle-off:active {
+      box-shadow: 0 2px 0 #78909c, 0 7px 12px var(--shadow);
+    }
+
+    button,
+    .nav-link {
+      border: 0;
+      border-radius: 16px;
+      padding: 11px 14px;
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+      box-shadow: 0 7px 0 #b54c11, 0 12px 18px var(--shadow);
+      transform: translateY(0);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    button:active,
+    .nav-link:active {
+      transform: translateY(5px);
+      box-shadow: 0 2px 0 #b54c11, 0 7px 12px var(--shadow);
+    }
+
+    button.secondary,
+    .nav-link.secondary {
+      color: #4e342e;
+      background: linear-gradient(180deg, #fff6d1, #ffd765);
+      box-shadow: 0 7px 0 #d1a530, 0 12px 18px var(--shadow);
+    }
+
+    button.secondary:active,
+    .nav-link.secondary:active {
+      box-shadow: 0 2px 0 #d1a530, 0 7px 12px var(--shadow);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+    }
+
+    .bottom-help {
+      position: absolute;
+      right: 16px;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: auto;
+      z-index: 5;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #d6e4ea;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);
+    }
+
+    .dot.done { background: #66bb6a; }
+
+    .loading, .error-box {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+    }
+
+    .message-card {
+      max-width: 680px;
+      padding: 24px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 16px 40px var(--shadow);
+      text-align: center;
+      border: 3px solid #ffe082;
+    }
+
+    .message-card h2 { margin: 0 0 10px; }
+    .message-card p { margin: 8px 0; line-height: 1.45; color: var(--muted); font-weight: 700; }
+    .message-card code { background: #f5f5f5; padding: 2px 6px; border-radius: 6px; }
+
+    @media (max-width: 760px) {
+      .hud {
+        grid-template-columns: 1fr;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        gap: 8px;
+      }
+
+      .title-panel, .equation-panel, .action-panel {
+        padding: 10px 12px;
+      }
+
+      .action-panel {
+        min-width: 0;
+      }
+
+      .action-buttons,
+      .toggle-buttons {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      button {
+        flex: 1;
+        padding: 10px 8px;
+        font-size: 14px;
+      }
+
+      .bottom-help {
+        right: 8px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        padding: 10px 12px;
+      }
+
+      .progress-dots { justify-content: center; }
+      .dot { width: 13px; height: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="scene" aria-label="Không gian game 3D cầu thang số"></div>
+
+    <div class="hud">
+      <section class="panel equation-panel" aria-live="polite">
+        <div class="title-row">
+          <div class="equation-label">Phép cộng đang học</div>
+          <span class="level-pill" id="levelText">Level 1</span>
+        </div>
+        <div class="equation">
+          <span class="math-box" id="startBox">0</span>
+          <span>+</span>
+          <span class="math-box" id="addBox">1</span>
+          <span>=</span>
+          <span class="math-box result" id="resultBox">?</span>
+        </div>
+      </section>
+
+      <section class="panel action-panel">
+        <div class="action-buttons">
+          <a class="nav-link secondary" href="../index.html">Trang chủ</a>
+          <button class="secondary" id="resetBtn">Chơi lại</button>
+          <button id="nextBtn" disabled>Tiếp theo</button>
+        </div>
+        <div class="toggle-buttons">
+          <button class="toggle-btn" id="soundToggleBtn" type="button" aria-pressed="true">Âm thanh: Bật</button>
+          <button class="toggle-btn" id="voiceToggleBtn" type="button" aria-pressed="true">Giọng nói: Bật</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel bottom-help" aria-live="polite">
+      <div class="progress-dots" id="progressDots" aria-label="Số bước đã nhảy"></div>
+    </section>
+
+    <div class="sr-only" id="statusText" aria-live="polite"></div>
+
+    <div class="loading" id="loading">
+      <div class="message-card">
+        <h2>Đang mở Cầu thang số…</h2>
+        <p>Game đang tải Three.js và dựng sân chơi 3D.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const threeSources = [
+      'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js',
+      'https://unpkg.com/three@0.164.1/build/three.module.js'
+    ];
+
+    async function loadThree() {
+      let lastError;
+      for (const src of threeSources) {
+        try {
+          return await import(src);
+        } catch (error) {
+          lastError = error;
+          console.warn('Không tải được Three.js từ', src, error);
+        }
+      }
+      throw lastError || new Error('Không tải được Three.js');
+    }
+
+    function showFatalError(error) {
+      document.getElementById('loading')?.remove();
+      const box = document.createElement('div');
+      box.className = 'error-box';
+      box.innerHTML = `
+        <div class="message-card">
+          <h2>Chưa tải được Three.js</h2>
+          <p>Phần chữ vẫn hiện, nhưng sân chơi 3D không chạy vì trình duyệt hoặc mạng đang chặn CDN.</p>
+          <p>Hãy chạy bằng local server: <code>python3 -m http.server 5173</code>, rồi mở <code>http://localhost:5173</code>.</p>
+          <p style="font-size:13px">Chi tiết lỗi: ${String(error && error.message ? error.message : error)}</p>
+        </div>
+      `;
+      document.getElementById('app').appendChild(box);
+    }
+
+    try {
+      const THREE = await loadThree();
+      bootGame(THREE);
+    } catch (error) {
+      showFatalError(error);
+    }
+
+    function bootGame(THREE) {
+      const sceneEl = document.getElementById('scene');
+      const loadingEl = document.getElementById('loading');
+      const levelText = document.getElementById('levelText');
+      const startBox = document.getElementById('startBox');
+      const addBox = document.getElementById('addBox');
+      const resultBox = document.getElementById('resultBox');
+      const statusText = document.getElementById('statusText');
+      const progressDots = document.getElementById('progressDots');
+      const resetBtn = document.getElementById('resetBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+
+      const levels = [
+        { start: 0, add: 1 },
+        { start: 1, add: 1 },
+        { start: 1, add: 2 },
+        { start: 2, add: 1 },
+        { start: 2, add: 2 },
+        { start: 3, add: 2 },
+        { start: 2, add: 3 },
+        { start: 4, add: 1 },
+        { start: 4, add: 3 },
+        { start: 5, add: 2 },
+        { start: 6, add: 3 },
+        { start: 5, add: 5 }
+      ];
+
+      let renderer, scene, camera, clock;
+      let raycaster, pointer, dragPlane;
+      let ambientLight, sunLight, rimLight, bounceLight;
+      let stairsGroup, heroGroup, cardGroup, goalFlag, confettiGroup;
+      let driftingClouds = [];
+      let floatingGlows = [];
+      let steps = [];
+      let cardHome = new THREE.Vector3(0, 0.72, 3.2);
+      let currentLevelIndex = 0;
+      let state = 'ready';
+      let currentLevel = levels[0];
+      let heroValue = 0;
+      let jumpState = null;
+      let dragging = false;
+      let dragOffset = new THREE.Vector3();
+      let dragPoint = new THREE.Vector3();
+      let isPointerDown = false;
+      let celebrationTime = 0;
+      let audioCtx = null;
+      let audioMaster = null;
+      let soundEnabled = true;
+      let voiceEnabled = true;
+      let hasUserInteracted = false;
+      let audioUnlocked = false;
+      let roundIntroPending = false;
+      let speechSequence = 0;
+      let preferredVoice = null;
+      const speechTimers = new Set();
+      const speechSynthesisRef = 'speechSynthesis' in window ? window.speechSynthesis : null;
+      const speechSupported = Boolean(speechSynthesisRef && window.SpeechSynthesisUtterance);
+      const STEP_WORDS = ['Không', 'Một', 'Hai', 'Ba', 'Bốn', 'Năm', 'Sáu', 'Bảy', 'Tám', 'Chín', 'Mười'];
+
+      const STEP_COUNT = 11;
+      const STEP_WIDTH = 1.08;
+      const STEP_GAP = 0.08;
+      const STEP_DEPTH = 1.55;
+      const STEP_RISE = 0.23;
+      const START_X = -((STEP_COUNT - 1) * (STEP_WIDTH + STEP_GAP)) / 2;
+
+      init();
+      startLevel(0);
+      animate();
+      loadingEl?.remove();
+
+      function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xc8ecff);
+        scene.fog = new THREE.Fog(0xc8ecff, 15, 36);
+
+        camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0.1, 8.05, 13.05);
+        camera.lookAt(0.1, 1.42, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.25));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.98;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        sceneEl.appendChild(renderer.domElement);
+
+        clock = new THREE.Clock();
+        raycaster = new THREE.Raycaster();
+        pointer = new THREE.Vector2();
+        dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.72);
+
+        ambientLight = new THREE.HemisphereLight(0xfffcf5, 0x8fd6ff, 1.78);
+        scene.add(ambientLight);
+
+        sunLight = new THREE.DirectionalLight(0xfff3cf, 2.35);
+        sunLight.position.set(6.5, 11, 8.5);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(3072, 3072);
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 38;
+        sunLight.shadow.camera.left = -12;
+        sunLight.shadow.camera.right = 12;
+        sunLight.shadow.camera.top = 12;
+        sunLight.shadow.camera.bottom = -12;
+        sunLight.shadow.bias = -0.00012;
+        sunLight.shadow.normalBias = 0.018;
+        sunLight.target.position.set(1.5, 1.5, 0);
+        scene.add(sunLight);
+        scene.add(sunLight.target);
+
+        rimLight = new THREE.DirectionalLight(0xffd9b8, 0.78);
+        rimLight.position.set(-8, 6.5, 5.5);
+        scene.add(rimLight);
+
+        bounceLight = new THREE.DirectionalLight(0xa9e4ff, 0.48);
+        bounceLight.position.set(-4.5, 4, -7);
+        scene.add(bounceLight);
+
+        createWorld();
+        createStairs();
+        createHero();
+        createCard();
+        createGoalFlag();
+        confettiGroup = new THREE.Group();
+        scene.add(confettiGroup);
+
+        window.addEventListener('resize', onResize);
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        resetBtn.addEventListener('click', () => {
+          unlockAudio(false);
+          startLevel(currentLevelIndex);
+        });
+        nextBtn.addEventListener('click', () => {
+          unlockAudio(false);
+          startLevel((currentLevelIndex + 1) % levels.length);
+        });
+        soundToggleBtn.addEventListener('click', () => {
+          unlockAudio(false);
+          setSoundEnabled(!soundEnabled);
+        });
+        voiceToggleBtn.addEventListener('click', () => {
+          unlockAudio(false);
+          setVoiceEnabled(!voiceEnabled);
+        });
+
+        if (speechSupported) {
+          speechSynthesisRef.addEventListener?.('voiceschanged', () => {
+            preferredVoice = null;
+          });
+        }
+
+        updateAudioButtons();
+      }
+
+      function createWorld() {
+        driftingClouds = [];
+        floatingGlows = [];
+
+        const sharedTextures = {
+          sky: createGradientTexture({
+            width: 768,
+            height: 768,
+            stops: [
+              [0, '#fffdf6'],
+              [0.24, '#e7f8ff'],
+              [0.58, '#c9ebff'],
+              [1, '#95d4ff']
+            ]
+          }),
+          sunGlow: createGradientTexture({
+            radial: true,
+            width: 512,
+            height: 512,
+            stops: [
+              [0, 'rgba(255,255,236,1)'],
+              [0.2, 'rgba(255,245,200,0.95)'],
+              [0.58, 'rgba(255,229,163,0.42)'],
+              [1, 'rgba(255,229,163,0)']
+            ]
+          }),
+          shadowBlob: createGradientTexture({
+            radial: true,
+            width: 512,
+            height: 512,
+            stops: [
+              [0, 'rgba(91,64,34,0.58)'],
+              [0.38, 'rgba(91,64,34,0.22)'],
+              [1, 'rgba(91,64,34,0)']
+            ]
+          }),
+          meadowGlow: createGradientTexture({
+            radial: true,
+            width: 768,
+            height: 768,
+            stops: [
+              [0, 'rgba(214,255,184,0.92)'],
+              [0.45, 'rgba(181,241,147,0.68)'],
+              [1, 'rgba(181,241,147,0)']
+            ]
+          }),
+          ground: createGradientTexture({
+            width: 1024,
+            height: 1024,
+            stops: [
+              [0, '#fff7d8'],
+              [0.4, '#fff1be'],
+              [1, '#f0d98a']
+            ]
+          })
+        };
+        scene.userData.sharedTextures = sharedTextures;
+
+        const skyDome = new THREE.Mesh(
+          new THREE.SphereGeometry(48, 48, 28),
+          new THREE.MeshBasicMaterial({
+            map: sharedTextures.sky,
+            side: THREE.BackSide,
+            fog: false
+          })
+        );
+        scene.add(skyDome);
+
+        const sunHalo = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: sharedTextures.sunGlow,
+            color: 0xffffff,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.95
+          })
+        );
+        sunHalo.position.set(-10.3, 8.8, -13.5);
+        sunHalo.scale.set(8.8, 8.8, 1);
+        sunHalo.userData.baseScale = 8.8;
+        scene.add(sunHalo);
+        floatingGlows.push(sunHalo);
+
+        const sunCore = new THREE.Mesh(
+          new THREE.CircleGeometry(1.18, 48),
+          new THREE.MeshBasicMaterial({ color: 0xfff5c0, transparent: true, opacity: 0.95, fog: false })
+        );
+        sunCore.position.set(-10.3, 8.8, -13.2);
+        scene.add(sunCore);
+
+        const ground = new THREE.Mesh(
+          new THREE.PlaneGeometry(28, 22),
+          new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            map: sharedTextures.ground,
+            roughness: 0.95,
+            metalness: 0.01
+          })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const fieldGlow = new THREE.Mesh(
+          new THREE.CircleGeometry(15.5, 72),
+          new THREE.MeshBasicMaterial({
+            map: sharedTextures.meadowGlow,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0.72
+          })
+        );
+        fieldGlow.rotation.x = -Math.PI / 2;
+        fieldGlow.position.set(0.25, 0.02, -0.55);
+        scene.add(fieldGlow);
+
+        const pathShadow = new THREE.Mesh(
+          new THREE.PlaneGeometry(17.8, 3.4),
+          new THREE.MeshBasicMaterial({
+            map: sharedTextures.shadowBlob,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0.18
+          })
+        );
+        pathShadow.rotation.x = -Math.PI / 2;
+        pathShadow.position.set(0.2, 0.025, 0.1);
+        scene.add(pathShadow);
+
+        const supportLength = stepX(STEP_COUNT - 1) - stepX(0) + STEP_WIDTH + 1.2;
+        const supportRise = stepY(STEP_COUNT - 1) - stepY(0) + 0.18;
+        const supportAngle = Math.atan2(supportRise, supportLength);
+        const supportCore = new THREE.Mesh(
+          new THREE.BoxGeometry(supportLength, 1.18, 1.88),
+          new THREE.MeshStandardMaterial({ color: 0xf0b97f, roughness: 0.82, metalness: 0.03 })
+        );
+        supportCore.position.set(
+          (stepX(0) + stepX(STEP_COUNT - 1)) / 2,
+          (stepY(0) + stepY(STEP_COUNT - 1)) / 2 - 0.64,
+          0.02
+        );
+        supportCore.rotation.z = supportAngle;
+        supportCore.castShadow = true;
+        supportCore.receiveShadow = true;
+        scene.add(supportCore);
+
+        const supportCap = new THREE.Mesh(
+          new THREE.BoxGeometry(supportLength * 0.98, 0.14, 1.72),
+          new THREE.MeshStandardMaterial({ color: 0xffe3bd, roughness: 0.48, metalness: 0.03 })
+        );
+        supportCap.position.copy(supportCore.position);
+        supportCap.position.y += 0.56;
+        supportCap.position.z = 0.03;
+        supportCap.rotation.z = supportAngle;
+        supportCap.castShadow = true;
+        supportCap.receiveShadow = true;
+        scene.add(supportCap);
+
+        const backHill = new THREE.Mesh(
+          new THREE.SphereGeometry(6.5, 32, 16),
+          new THREE.MeshStandardMaterial({ color: 0x9fdd9a, roughness: 0.92 })
+        );
+        backHill.scale.set(1.8, 0.35, 0.55);
+        backHill.position.set(-6, -0.8, -4.4);
+        scene.add(backHill);
+
+        const backHill2 = backHill.clone();
+        backHill2.position.set(6.5, -0.9, -4.8);
+        backHill2.scale.set(1.45, 0.32, 0.5);
+        scene.add(backHill2);
+
+        const farHill = new THREE.Mesh(
+          new THREE.SphereGeometry(8.8, 32, 16),
+          new THREE.MeshStandardMaterial({ color: 0x93d1a9, roughness: 0.95 })
+        );
+        farHill.scale.set(2.1, 0.23, 0.46);
+        farHill.position.set(0.8, -1.5, -8.1);
+        scene.add(farHill);
+
+        const railMaterial = new THREE.MeshStandardMaterial({ color: 0xfdf8eb, roughness: 0.48, metalness: 0.04 });
+        for (let i = 0; i < STEP_COUNT; i += 1) {
+          const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 12), railMaterial);
+          post.position.set(stepX(i) + 0.08, stepY(i) + 0.53, -0.82);
+          post.castShadow = true;
+          scene.add(post);
+        }
+
+        const rail = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.045, 0.045, supportLength - 0.5, 16),
+          railMaterial
+        );
+        rail.rotation.z = supportAngle - Math.PI / 2;
+        rail.position.set(
+          (stepX(0) + stepX(STEP_COUNT - 1)) / 2 + 0.1,
+          (stepY(0) + stepY(STEP_COUNT - 1)) / 2 + 0.82,
+          -0.82
+        );
+        rail.castShadow = true;
+        scene.add(rail);
+
+        for (let i = 0; i < 24; i++) {
+          const cloud = createCloud();
+          cloud.position.set(
+            -12 + Math.random() * 24,
+            5.5 + Math.random() * 3.2,
+            -7 - Math.random() * 2
+          );
+          cloud.scale.setScalar(0.45 + Math.random() * 0.55);
+          cloud.userData.baseX = cloud.position.x;
+          cloud.userData.baseY = cloud.position.y;
+          cloud.userData.phase = Math.random() * Math.PI * 2;
+          cloud.userData.drift = 0.1 + Math.random() * 0.14;
+          scene.add(cloud);
+          driftingClouds.push(cloud);
+        }
+      }
+
+      function createCloud() {
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.95,
+          emissive: 0xf6fbff,
+          emissiveIntensity: 0.22
+        });
+        const sizes = [0.55, 0.75, 0.5, 0.42];
+        const xs = [-0.45, 0.05, 0.55, 0.95];
+        const ys = [0, 0.12, 0.02, -0.03];
+        sizes.forEach((size, i) => {
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(size, 18, 12), mat);
+          ball.position.set(xs[i], ys[i], 0);
+          group.add(ball);
+        });
+        return group;
+      }
+
+      function createStairs() {
+        stairsGroup = new THREE.Group();
+        scene.add(stairsGroup);
+        steps = [];
+        const shadowTexture = scene.userData.sharedTextures?.shadowBlob;
+
+        for (let i = 0; i < STEP_COUNT; i++) {
+          const x = stepX(i);
+          const y = stepY(i);
+          const stepGroup = new THREE.Group();
+          stepGroup.position.set(x, y, 0);
+
+          const hue = 0.06 + i * 0.021;
+          const baseColor = new THREE.Color().setHSL(hue, 0.78, 0.62);
+          const material = new THREE.MeshStandardMaterial({
+            color: baseColor,
+            roughness: 0.66,
+            metalness: 0.04
+          });
+          const body = new THREE.Mesh(new THREE.BoxGeometry(STEP_WIDTH, 0.34, STEP_DEPTH), material);
+          body.castShadow = true;
+          body.receiveShadow = true;
+          body.userData.baseColor = baseColor.clone();
+          body.position.y = 0.02;
+          stepGroup.add(body);
+
+          const underGlow = new THREE.Mesh(
+            new THREE.PlaneGeometry(STEP_WIDTH * 1.1, STEP_DEPTH * 0.88),
+            new THREE.MeshBasicMaterial({
+              map: shadowTexture,
+              transparent: true,
+              depthWrite: false,
+              opacity: 0.24
+            })
+          );
+          underGlow.rotation.x = -Math.PI / 2;
+          underGlow.position.set(0, -0.16, 0.05);
+          stepGroup.add(underGlow);
+
+          const frontFace = new THREE.Mesh(
+            new THREE.BoxGeometry(STEP_WIDTH * 0.92, 0.14, 0.08),
+            new THREE.MeshStandardMaterial({ color: baseColor.clone().offsetHSL(0, 0, -0.08), roughness: 0.74 })
+          );
+          frontFace.position.set(0, -0.03, STEP_DEPTH * 0.46);
+          frontFace.castShadow = true;
+          stepGroup.add(frontFace);
+
+          const top = new THREE.Mesh(
+            new THREE.BoxGeometry(STEP_WIDTH * 0.88, 0.035, STEP_DEPTH * 0.82),
+            new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              roughness: 0.38,
+              transparent: true,
+              opacity: 0.46
+            })
+          );
+          top.position.y = 0.21;
+          top.receiveShadow = true;
+          stepGroup.add(top);
+
+          const label = createTextSprite(String(i), {
+            fontSize: 82,
+            textColor: '#3d2a18',
+            background: 'rgba(255,255,255,0.92)',
+            border: '#fff3bf',
+            padding: 28,
+            resolutionScale: 1.95
+          });
+          label.position.set(0, 0.48, 0.02);
+          label.scale.set(0.72, 0.48, 1);
+          stepGroup.add(label);
+
+          stairsGroup.add(stepGroup);
+          steps.push({ group: stepGroup, body, label, value: i, material, baseColor });
+        }
+      }
+
+      function createHero() {
+        heroGroup = new THREE.Group();
+        heroGroup.name = 'hero';
+        const shadowTexture = scene.userData.sharedTextures?.shadowBlob;
+
+        const bodyMat = new THREE.MeshPhysicalMaterial({
+          color: 0x56c8ff,
+          roughness: 0.42,
+          metalness: 0.02,
+          clearcoat: 0.35,
+          clearcoatRoughness: 0.45
+        });
+        const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.66 });
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xffd7a8, roughness: 0.58 });
+        const earMat = new THREE.MeshStandardMaterial({ color: 0xffb3c6, roughness: 0.6 });
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 0.38 });
+
+        const heroShadow = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.96, 0.62),
+          new THREE.MeshBasicMaterial({
+            map: shadowTexture,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0.26
+          })
+        );
+        heroShadow.rotation.x = -Math.PI / 2;
+        heroShadow.position.set(0, 0.02, 0.06);
+        heroGroup.add(heroShadow);
+
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), bodyMat);
+        body.scale.set(0.9, 1.12, 0.72);
+        body.position.y = 0.35;
+        body.castShadow = true;
+        heroGroup.add(body);
+
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 12), bellyMat);
+        belly.scale.set(1, 1.08, 0.3);
+        belly.position.set(0, 0.31, 0.25);
+        heroGroup.add(belly);
+
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 28, 20), headMat);
+        head.position.y = 0.84;
+        head.castShadow = true;
+        heroGroup.add(head);
+
+        const ear1 = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.42, 8, 16), earMat);
+        ear1.position.set(-0.14, 1.18, 0.02);
+        ear1.rotation.z = -0.22;
+        ear1.castShadow = true;
+        heroGroup.add(ear1);
+
+        const ear2 = ear1.clone();
+        ear2.position.x = 0.14;
+        ear2.rotation.z = 0.22;
+        heroGroup.add(ear2);
+
+        const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), eyeMat);
+        eye1.position.set(-0.095, 0.89, 0.27);
+        heroGroup.add(eye1);
+        const eye2 = eye1.clone();
+        eye2.position.x = 0.095;
+        heroGroup.add(eye2);
+
+        const foot1 = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12), bellyMat);
+        foot1.scale.set(1.1, 0.6, 1.55);
+        foot1.position.set(-0.12, 0.08, 0.11);
+        heroGroup.add(foot1);
+
+        const foot2 = foot1.clone();
+        foot2.position.x = 0.12;
+        heroGroup.add(foot2);
+
+        const smile = createTextSprite('⌣', {
+          fontSize: 92,
+          textColor: '#5d4037',
+          background: 'rgba(255,255,255,0)',
+          border: 'rgba(255,255,255,0)',
+          padding: 8,
+          resolutionScale: 1.8
+        });
+        smile.position.set(0, 0.73, 0.31);
+        smile.scale.set(0.22, 0.16, 1);
+        heroGroup.add(smile);
+
+        scene.add(heroGroup);
+      }
+
+      function createCard() {
+        cardGroup = new THREE.Group();
+        cardGroup.name = 'addition-card';
+        cardGroup.userData.draggable = true;
+        cardGroup.position.copy(cardHome);
+
+        const cardMat = new THREE.MeshPhysicalMaterial({
+          color: 0xffef73,
+          roughness: 0.35,
+          metalness: 0.03,
+          clearcoat: 0.42,
+          clearcoatRoughness: 0.38
+        });
+        const card = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.18, 1.05), cardMat);
+        card.castShadow = true;
+        card.receiveShadow = true;
+        card.userData.cardRoot = cardGroup;
+        cardGroup.add(card);
+
+        const basePlate = new THREE.Mesh(
+          new THREE.BoxGeometry(1.58, 0.06, 1.16),
+          new THREE.MeshStandardMaterial({ color: 0xffd85c, roughness: 0.72, metalness: 0.02 })
+        );
+        basePlate.position.y = -0.1;
+        basePlate.castShadow = true;
+        basePlate.receiveShadow = true;
+        basePlate.userData.cardRoot = cardGroup;
+        cardGroup.add(basePlate);
+
+        const top = new THREE.Mesh(
+          new THREE.BoxGeometry(1.32, 0.035, 0.92),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.36, transparent: true, opacity: 0.68 })
+        );
+        top.position.y = 0.095;
+        top.userData.cardRoot = cardGroup;
+        cardGroup.add(top);
+
+        const label = createTextSprite('+1', {
+          fontSize: 92,
+          textColor: '#5d4037',
+          background: 'rgba(255,255,255,0.96)',
+          border: '#ffcc33',
+          padding: 24,
+          resolutionScale: 2
+        });
+        label.name = 'card-label';
+        label.position.set(0, 0.25, 0.02);
+        label.scale.set(0.9, 0.56, 1);
+        label.userData.cardRoot = cardGroup;
+        cardGroup.add(label);
+
+        const hint = createTextSprite('Kéo thẻ này', {
+          fontSize: 44,
+          textColor: '#795548',
+          background: 'rgba(255,255,255,0.9)',
+          border: '#ffecb3',
+          padding: 16,
+          resolutionScale: 1.8
+        });
+        hint.name = 'card-hint';
+        hint.position.set(0, 0.98, 0);
+        hint.scale.set(1.05, 0.32, 1);
+        hint.userData.cardRoot = cardGroup;
+        cardGroup.add(hint);
+
+        scene.add(cardGroup);
+      }
+
+      function createGoalFlag() {
+        goalFlag = new THREE.Group();
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.035, 0.035, 1.3, 16),
+          new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 0.65 })
+        );
+        pole.position.y = 0.65;
+        pole.castShadow = true;
+        goalFlag.add(pole);
+
+        const flag = new THREE.Mesh(
+          new THREE.BoxGeometry(0.62, 0.38, 0.045),
+          new THREE.MeshStandardMaterial({ color: 0xff6f61, roughness: 0.6 })
+        );
+        flag.position.set(0.32, 1.08, 0);
+        flag.castShadow = true;
+        goalFlag.add(flag);
+
+        const star = createTextSprite('★', {
+          fontSize: 72,
+          textColor: '#ffffff',
+          background: 'rgba(255,255,255,0)',
+          border: 'rgba(255,255,255,0)',
+          padding: 8,
+          resolutionScale: 1.8
+        });
+        star.position.set(0.32, 1.1, 0.05);
+        star.scale.set(0.28, 0.24, 1);
+        goalFlag.add(star);
+
+        scene.add(goalFlag);
+      }
+
+      function startLevel(index) {
+        stopSpeaking();
+        currentLevelIndex = index;
+        currentLevel = levels[index];
+        heroValue = currentLevel.start;
+        state = 'ready';
+        dragging = false;
+        jumpState = null;
+        celebrationTime = 0;
+        nextBtn.disabled = true;
+        roundIntroPending = voiceEnabled && !hasUserInteracted;
+        cardGroup.visible = true;
+        cardGroup.position.copy(cardHome);
+        cardGroup.rotation.set(0, 0, 0);
+        cardGroup.scale.set(1, 1, 1);
+        updateCardLabel(currentLevel.add);
+        setHeroOnStep(heroValue);
+        placeGoalFlag(currentLevel.start + currentLevel.add);
+        clearConfetti();
+        updateStepHighlights();
+        updateHud();
+        updateProgressDots(0);
+
+        if (voiceEnabled && hasUserInteracted) {
+          speakRoundIntro(currentLevel.start, currentLevel.add);
+        }
+      }
+
+      function updateHud() {
+        const target = currentLevel.start + currentLevel.add;
+        levelText.textContent = `Level ${currentLevelIndex + 1}/${levels.length}`;
+        startBox.textContent = currentLevel.start;
+        addBox.textContent = currentLevel.add;
+        resultBox.textContent = state === 'complete' ? target : '?';
+
+        if (state === 'ready') {
+          statusText.textContent = `Kéo thẻ cộng ${currentLevel.add} vào bạn nhỏ. Cộng nghĩa là đang ở ${currentLevel.start}, đi thêm ${currentLevel.add} bước về phía trước.`;
+        } else if (state === 'animating') {
+          const done = jumpState ? jumpState.completed : 0;
+          const from = currentLevel.start + done;
+          const to = Math.min(from + 1, target);
+          statusText.textContent = `Bước ${Math.min(done + 1, currentLevel.add)} trên ${currentLevel.add}: ${from} đến ${to}.`;
+        } else if (state === 'complete') {
+          statusText.textContent = `${currentLevel.start} cộng ${currentLevel.add} bằng ${target}. Bé đã đi thêm ${currentLevel.add} bước và dừng ở số ${target}.`;
+        }
+      }
+
+      function updateProgressDots(done) {
+        progressDots.innerHTML = '';
+        for (let i = 0; i < currentLevel.add; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'dot' + (i < done ? ' done' : '');
+          progressDots.appendChild(dot);
+        }
+      }
+
+      function updateCardLabel(value) {
+        const oldLabel = cardGroup.getObjectByName('card-label');
+        if (oldLabel) cardGroup.remove(oldLabel);
+        const label = createTextSprite(`+${value}`, {
+          fontSize: 104,
+          textColor: '#5d4037',
+          background: 'rgba(255,255,255,0.96)',
+          border: '#ffcc33',
+          padding: 24,
+          resolutionScale: 2.05
+        });
+        label.name = 'card-label';
+        label.position.set(0, 0.25, 0.02);
+        label.scale.set(0.9, 0.56, 1);
+        label.userData.cardRoot = cardGroup;
+        cardGroup.add(label);
+      }
+
+      function stepX(value) {
+        return START_X + value * (STEP_WIDTH + STEP_GAP);
+      }
+
+      function stepY(value) {
+        return value * STEP_RISE + 0.17;
+      }
+
+      function setHeroOnStep(value) {
+        heroGroup.userData.baseY = stepY(value) + 0.25;
+        heroGroup.position.set(stepX(value), heroGroup.userData.baseY, -0.04);
+        heroGroup.rotation.y = 0;
+      }
+
+      function placeGoalFlag(value) {
+        goalFlag.position.set(stepX(value) + 0.1, stepY(value) + 0.23, -0.63);
+        goalFlag.rotation.y = -0.18;
+      }
+
+      function updateStepHighlights() {
+        const target = currentLevel.start + currentLevel.add;
+        for (const step of steps) {
+          if (step.value === heroValue) {
+            step.material.color.set(0x66bb6a);
+          } else if (step.value === target) {
+            step.material.color.set(0xff7043);
+          } else if (step.value > currentLevel.start && step.value < target) {
+            step.material.color.set(0xffd54f);
+          } else {
+            step.material.color.copy(step.baseColor);
+          }
+        }
+      }
+
+      function onPointerDown(event) {
+        if (state !== 'ready') return;
+        isPointerDown = true;
+        unlockAudio(true);
+        updatePointer(event);
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(cardGroup.children, true);
+        if (hits.length === 0) return;
+        const root = hits[0].object.userData.cardRoot;
+        if (root !== cardGroup) return;
+        dragging = true;
+        playPop();
+        cardGroup.scale.set(1.07, 1.07, 1.07);
+        if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+          dragOffset.copy(cardGroup.position).sub(dragPoint);
+        } else {
+          dragOffset.set(0, 0, 0);
+        }
+        renderer.domElement.setPointerCapture?.(event.pointerId);
+      }
+
+      function onPointerMove(event) {
+        if (!dragging || state !== 'ready') return;
+        updatePointer(event);
+        raycaster.setFromCamera(pointer, camera);
+        if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+          cardGroup.position.copy(dragPoint.add(dragOffset));
+          cardGroup.position.y = 0.78;
+          cardGroup.position.z = THREE.MathUtils.clamp(cardGroup.position.z, -0.8, 4.2);
+          cardGroup.position.x = THREE.MathUtils.clamp(cardGroup.position.x, -6, 6);
+        }
+      }
+
+      function onPointerUp(event) {
+        isPointerDown = false;
+        if (!dragging) return;
+        dragging = false;
+        cardGroup.scale.set(1, 1, 1);
+        renderer.domElement.releasePointerCapture?.(event.pointerId);
+
+        const heroDropPosition = heroGroup.position.clone();
+        heroDropPosition.z += 0.4;
+        const distance = cardGroup.position.distanceTo(heroDropPosition);
+        if (distance < 1.9) {
+          playDrop();
+          speak(`Thêm ${currentLevel.add} bước nhé.`);
+          beginJumpLesson();
+        } else {
+          playHint();
+          statusText.textContent = `Đưa thẻ lại gần bạn nhỏ nhé. Khi thẻ chạm bạn nhỏ, bạn ấy sẽ nhảy thêm ${currentLevel.add} bậc.`;
+          speak('Mình thử đưa thẻ lại gần bạn nhỏ nhé.');
+          animateCardBack();
+        }
+      }
+
+      function updatePointer(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function animateCardBack() {
+        const start = cardGroup.position.clone();
+        const duration = 0.25;
+        const startedAt = performance.now();
+        const animateBack = (now) => {
+          if (dragging || state !== 'ready') return;
+          const elapsed = (now - startedAt) / 1000;
+          const t = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - t, 3);
+          cardGroup.position.lerpVectors(start, cardHome, ease);
+          if (t < 1) requestAnimationFrame(animateBack);
+        };
+        requestAnimationFrame(animateBack);
+      }
+
+      function beginJumpLesson() {
+        state = 'animating';
+        cardGroup.visible = false;
+        jumpState = {
+          completed: 0,
+          fromValue: currentLevel.start,
+          toValue: currentLevel.start + 1,
+          progress: 0,
+          duration: 0.48,
+          pauseDuration: 0.12,
+          pauseRemaining: voiceEnabled ? 1.22 : 0.18,
+          segmentStarted: false
+        };
+        scheduleSpeech('Mình cùng đếm nào.', 420, false);
+        updateHud();
+        updateProgressDots(0);
+      }
+
+      function updateJump(delta) {
+        if (!jumpState) return;
+        const target = currentLevel.start + currentLevel.add;
+        if (jumpState.pauseRemaining > 0) {
+          jumpState.pauseRemaining = Math.max(0, jumpState.pauseRemaining - delta);
+          if (jumpState.pauseRemaining > 0) return;
+        }
+
+        if (!jumpState.segmentStarted) {
+          jumpState.segmentStarted = true;
+          playStep();
+        }
+
+        jumpState.progress = Math.min(jumpState.progress + delta / jumpState.duration, 1);
+        const t = Math.min(jumpState.progress, 1);
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const arc = Math.sin(t * Math.PI) * 0.75;
+
+        const from = jumpState.fromValue;
+        const to = jumpState.toValue;
+        heroGroup.position.x = THREE.MathUtils.lerp(stepX(from), stepX(to), ease);
+        heroGroup.position.y = THREE.MathUtils.lerp(stepY(from), stepY(to), ease) + 0.25 + arc;
+        heroGroup.position.z = -0.04 + Math.sin(t * Math.PI) * 0.04;
+        heroGroup.rotation.z = Math.sin(t * Math.PI * 2) * 0.08;
+
+        if (t >= 1) {
+          heroValue = to;
+          setHeroOnStep(heroValue);
+          playTick();
+          jumpState.completed += 1;
+          speakStepCount(jumpState.completed, heroValue);
+          updateStepHighlights();
+          updateProgressDots(jumpState.completed);
+
+          if (heroValue >= target) {
+            finishLevel();
+          } else {
+            jumpState.progress = 0;
+            jumpState.fromValue = heroValue;
+            jumpState.toValue = heroValue + 1;
+            jumpState.pauseRemaining = jumpState.pauseDuration;
+            jumpState.segmentStarted = false;
+            updateHud();
+          }
+        }
+      }
+
+      function finishLevel() {
+        const start = currentLevel.start;
+        const step = currentLevel.add;
+        const result = start + step;
+        state = 'complete';
+        jumpState = null;
+        heroGroup.rotation.z = 0;
+        nextBtn.disabled = false;
+        resultBox.textContent = result;
+        spawnConfetti();
+        playSuccess();
+        scheduleSpeechTask(() => speakResult(start, step, result), 220);
+        updateHud();
+      }
+
+      function spawnConfetti() {
+        clearConfetti();
+        const target = currentLevel.start + currentLevel.add;
+        const origin = new THREE.Vector3(stepX(target), stepY(target) + 1.7, 0);
+        const colors = [0xff6f61, 0xffc107, 0x4fc3f7, 0x66bb6a, 0xab47bc, 0xff8a65];
+        for (let i = 0; i < 96; i++) {
+          const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.08, 0.08, 0.03),
+            new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.65 })
+          );
+          mesh.position.copy(origin);
+          mesh.position.x += (Math.random() - 0.5) * 1.5;
+          mesh.position.y += Math.random() * 0.5;
+          mesh.position.z += (Math.random() - 0.5) * 1.0;
+          mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+          mesh.userData.velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 3.8,
+            2.2 + Math.random() * 3.0,
+            (Math.random() - 0.5) * 2.2
+          );
+          mesh.userData.spin = new THREE.Vector3(
+            (Math.random() - 0.5) * 8,
+            (Math.random() - 0.5) * 8,
+            (Math.random() - 0.5) * 8
+          );
+          confettiGroup.add(mesh);
+        }
+        celebrationTime = 2.4;
+        playSparkleBurst();
+      }
+
+      function clearConfetti() {
+        if (!confettiGroup) return;
+        while (confettiGroup.children.length) {
+          const child = confettiGroup.children.pop();
+          child.geometry?.dispose?.();
+          child.material?.dispose?.();
+        }
+      }
+
+      function updateConfetti(delta) {
+        if (confettiGroup.children.length === 0) return;
+        celebrationTime -= delta;
+        for (const child of confettiGroup.children) {
+          child.userData.velocity.y -= 4.2 * delta;
+          child.position.addScaledVector(child.userData.velocity, delta);
+          child.rotation.x += child.userData.spin.x * delta;
+          child.rotation.y += child.userData.spin.y * delta;
+          child.rotation.z += child.userData.spin.z * delta;
+        }
+        if (celebrationTime < -1.1) clearConfetti();
+      }
+
+      function createGradientTexture({ width = 512, height = 512, radial = false, stops = [] } = {}) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        const gradient = radial
+          ? ctx.createRadialGradient(width * 0.5, height * 0.5, width * 0.02, width * 0.5, height * 0.5, width * 0.5)
+          : ctx.createLinearGradient(0, 0, 0, height);
+
+        stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(12, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+        return texture;
+      }
+
+      function createTextSprite(text, options = {}) {
+        const fontSize = options.fontSize || 64;
+        const textColor = options.textColor || '#263238';
+        const background = options.background ?? 'rgba(255,255,255,0.95)';
+        const border = options.border ?? '#ffffff';
+        const padding = options.padding || 20;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const resolutionScale = (options.resolutionScale || 1.5) * pixelRatio;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const font = `900 ${fontSize}px ui-rounded, "SF Pro Rounded", "Nunito", "Comic Sans MS", system-ui, sans-serif`;
+        ctx.font = font;
+        const metrics = ctx.measureText(text);
+        const w = Math.ceil(metrics.width + padding * 2);
+        const h = Math.ceil(fontSize + padding * 2);
+        canvas.width = nextPowerOfTwo(Math.ceil(w * resolutionScale));
+        canvas.height = nextPowerOfTwo(Math.ceil(h * resolutionScale));
+
+        ctx.setTransform(canvas.width / w, 0, 0, canvas.height / h, 0, 0);
+
+        ctx.font = font;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        drawRoundRect(ctx, 6, 6, w - 12, h - 12, Math.min(28, h / 3), background, border);
+        ctx.fillStyle = textColor;
+        ctx.fillText(text, w / 2, h / 2 + fontSize * 0.02);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(16, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+        texture.generateMipmaps = true;
+        const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
+        const sprite = new THREE.Sprite(material);
+        sprite.userData.texture = texture;
+        return sprite;
+      }
+
+      function drawRoundRect(ctx, x, y, w, h, r, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        if (fill && fill !== 'transparent') {
+          ctx.fillStyle = fill;
+          ctx.fill();
+        }
+        if (stroke && stroke !== 'transparent') {
+          ctx.lineWidth = 8;
+          ctx.strokeStyle = stroke;
+          ctx.stroke();
+        }
+      }
+
+      function nextPowerOfTwo(value) {
+        return Math.pow(2, Math.ceil(Math.log2(Math.max(2, value))));
+      }
+
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.25));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = Math.min(clock.getDelta(), 0.033);
+        if (state === 'animating') updateJump(delta);
+        updateConfetti(delta);
+        const t = performance.now() * 0.001;
+        if (heroGroup && state !== 'animating') {
+          heroGroup.position.y = (heroGroup.userData.baseY ?? heroGroup.position.y) + Math.sin(t * 3) * 0.018;
+        }
+        if (cardGroup && state === 'ready' && !dragging) {
+          cardGroup.rotation.y = Math.sin(t * 1.6) * 0.045;
+          cardGroup.position.y = cardHome.y + Math.sin(t * 2.2) * 0.035;
+        }
+        for (const cloud of driftingClouds) {
+          cloud.position.x = cloud.userData.baseX + Math.sin(t * cloud.userData.drift + cloud.userData.phase) * 0.38;
+          cloud.position.y = cloud.userData.baseY + Math.cos(t * (cloud.userData.drift + 0.04) + cloud.userData.phase) * 0.08;
+        }
+        for (const glow of floatingGlows) {
+          const baseScale = glow.userData.baseScale || 1;
+          glow.scale.setScalar(baseScale + Math.sin(t * 0.8) * 0.18);
+        }
+        if (goalFlag) goalFlag.rotation.z = Math.sin(t * 2.5) * 0.025;
+        renderer.render(scene, camera);
+      }
+
+      function initAudio() {
+        if (audioCtx) return audioCtx;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return null;
+
+        try {
+          audioCtx = new AudioContext();
+          audioMaster = audioCtx.createGain();
+          audioMaster.gain.value = 0.75;
+          audioMaster.connect(audioCtx.destination);
+        } catch (error) {
+          audioCtx = null;
+          audioMaster = null;
+        }
+
+        return audioCtx;
+      }
+
+      function unlockAudio(allowRoundIntro = false) {
+        hasUserInteracted = true;
+        const ctx = initAudio();
+
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+
+        audioUnlocked = Boolean(ctx);
+
+        if (allowRoundIntro && roundIntroPending && state === 'ready') {
+          speakRoundIntro(currentLevel.start, currentLevel.add);
+        }
+      }
+
+      function playTone({
+        frequency = 440,
+        endFrequency = frequency,
+        duration = 0.08,
+        type = 'sine',
+        volume = 0.03,
+        attack = 0.01,
+        delay = 0
+      } = {}) {
+        if (!soundEnabled || !audioCtx || !audioMaster || !audioUnlocked) return;
+
+        try {
+          const now = audioCtx.currentTime + delay;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, now);
+          if (endFrequency !== frequency) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(24, endFrequency), now + duration);
+          }
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(volume, now + attack);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+          osc.connect(gain).connect(audioMaster);
+          osc.start(now);
+          osc.stop(now + duration + 0.03);
+        } catch (error) {
+          // Ignore audio synthesis errors so gameplay keeps running.
+        }
+      }
+
+      function playPop() {
+        playTone({ frequency: 720, endFrequency: 980, duration: 0.07, type: 'triangle', volume: 0.028 });
+      }
+
+      function playDrop() {
+        playTone({ frequency: 420, endFrequency: 280, duration: 0.09, type: 'sine', volume: 0.026 });
+        playTone({ frequency: 520, endFrequency: 430, duration: 0.07, type: 'triangle', volume: 0.02, delay: 0.03 });
+      }
+
+      function playStep() {
+        playTone({ frequency: 460, endFrequency: 660, duration: 0.11, type: 'triangle', volume: 0.026 });
+      }
+
+      function playTick() {
+        playTone({ frequency: 1120, endFrequency: 1240, duration: 0.05, type: 'square', volume: 0.012, attack: 0.004 });
+      }
+
+      function playSuccess() {
+        playTone({ frequency: 660, endFrequency: 720, duration: 0.1, type: 'triangle', volume: 0.028 });
+        playTone({ frequency: 840, endFrequency: 940, duration: 0.12, type: 'triangle', volume: 0.028, delay: 0.12 });
+        playTone({ frequency: 1040, endFrequency: 1240, duration: 0.18, type: 'triangle', volume: 0.03, delay: 0.25 });
+      }
+
+      function playHint() {
+        playTone({ frequency: 320, endFrequency: 250, duration: 0.12, type: 'sine', volume: 0.016 });
+      }
+
+      function playSparkleBurst() {
+        playTone({ frequency: 1320, endFrequency: 1480, duration: 0.08, type: 'triangle', volume: 0.014, delay: 0.08 });
+        playTone({ frequency: 1560, endFrequency: 1720, duration: 0.08, type: 'triangle', volume: 0.012, delay: 0.16 });
+        playTone({ frequency: 1760, endFrequency: 1980, duration: 0.1, type: 'triangle', volume: 0.011, delay: 0.24 });
+      }
+
+      function speak(text) {
+        if (!voiceEnabled || !speechSupported || !hasUserInteracted || !text) return;
+        stopSpeaking();
+        speakNow(text);
+      }
+
+      function stopSpeaking() {
+        clearSpeechTimers();
+        speechSequence += 1;
+        if (!speechSupported) return;
+        try {
+          speechSynthesisRef.cancel();
+        } catch (error) {
+          // Ignore speech cancellation issues so the game never crashes.
+        }
+      }
+
+      function speakRoundIntro(start, step) {
+        roundIntroPending = false;
+        if (!voiceEnabled || !hasUserInteracted) {
+          roundIntroPending = voiceEnabled && !hasUserInteracted;
+          return;
+        }
+        speak(`Bắt đầu ở số ${start}.`);
+      }
+
+      function speakStepCount(currentStep, currentNumber) {
+        const label = STEP_WORDS[currentStep] || String(currentNumber);
+        speak(label);
+      }
+
+      function speakResult(start, step, result) {
+        speak(buildResultMessage(start, step, result));
+      }
+
+      function setSoundEnabled(enabled) {
+        soundEnabled = Boolean(enabled);
+        updateAudioButtons();
+      }
+
+      function setVoiceEnabled(enabled) {
+        voiceEnabled = Boolean(enabled);
+        if (!voiceEnabled) {
+          roundIntroPending = false;
+          stopSpeaking();
+        } else if (state === 'ready') {
+          roundIntroPending = true;
+        }
+        updateAudioButtons();
+      }
+
+      function updateAudioButtons() {
+        updateToggleButton(soundToggleBtn, 'Âm thanh', soundEnabled);
+        updateToggleButton(voiceToggleBtn, 'Giọng nói', voiceEnabled);
+      }
+
+      function updateToggleButton(button, label, enabled) {
+        button.textContent = `${label}: ${enabled ? 'Bật' : 'Tắt'}`;
+        button.setAttribute('aria-pressed', String(enabled));
+        button.classList.toggle('toggle-off', !enabled);
+      }
+
+      function clearSpeechTimers() {
+        for (const timer of speechTimers) clearTimeout(timer);
+        speechTimers.clear();
+      }
+
+      function scheduleSpeech(text, delay = 0, interrupt = false) {
+        scheduleSpeechTask(() => {
+          if (interrupt) {
+            speak(text);
+          } else {
+            queueSpeech(text);
+          }
+        }, delay);
+      }
+
+      function scheduleSpeechTask(task, delay = 0) {
+        if (!voiceEnabled || !speechSupported || !hasUserInteracted) return;
+        const token = speechSequence;
+        const timer = window.setTimeout(() => {
+          speechTimers.delete(timer);
+          if (token !== speechSequence || !voiceEnabled) return;
+          task();
+        }, delay);
+        speechTimers.add(timer);
+      }
+
+      function queueSpeech(text) {
+        if (!voiceEnabled || !speechSupported || !hasUserInteracted || !text) return;
+        speakNow(text);
+      }
+
+      function speakNow(text) {
+        if (!voiceEnabled || !speechSupported || !hasUserInteracted || !text) return;
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'vi-VN';
+          utterance.rate = 0.9;
+          utterance.pitch = 1.1;
+          utterance.volume = 0.9;
+          const voice = getPreferredVoice();
+          if (voice) utterance.voice = voice;
+          speechSynthesisRef.speak(utterance);
+        } catch (error) {
+          // Speech is optional; ignore unsupported browser/runtime cases.
+        }
+      }
+
+      function getPreferredVoice() {
+        if (!speechSupported) return null;
+        if (preferredVoice) return preferredVoice;
+
+        try {
+          const voices = speechSynthesisRef.getVoices() || [];
+          preferredVoice =
+            voices.find((voice) => voice.lang?.toLowerCase().startsWith('vi')) ||
+            voices.find((voice) => {
+              const name = voice.name?.toLowerCase() || '';
+              return name.includes('viet') || name.includes('vietnam');
+            }) ||
+            null;
+        } catch (error) {
+          preferredVoice = null;
+        }
+
+        return preferredVoice;
+      }
+
+      function buildResultMessage(start, step, result) {
+        return `Đến số ${result} rồi. Vậy ${start} cộng ${step} bằng ${result}. Bắt đầu ở ${start}, thêm ${step} bước, đến ${result}.`;
+      }
+    }
+  </script>
+</body>
+</html>
