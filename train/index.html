@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Đoàn tàu số</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b9ecff'/%3E%3Crect x='10' y='26' width='44' height='22' rx='5' fill='%23ffcf48'/%3E%3Ccircle cx='22' cy='51' r='6' fill='%2315324a'/%3E%3Ccircle cx='44' cy='51' r='6' fill='%2315324a'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial' font-size='24' font-weight='900' fill='%2315324a'%3E1%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --sky: #b9ecff;
+      --sky-deep: #75d6ff;
+      --grass: #75d979;
+      --ink: #15324a;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-border: rgba(21, 50, 74, 0.12);
+      --button: #ffcf48;
+      --button-dark: #e6a800;
+      --button-next: #66d17a;
+      --button-next-dark: #32a852;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 66%, #9fe883 100%);
+    }
+
+    #scene-container {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) auto max(14px, env(safe-area-inset-left));
+      z-index: 10;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .title-card,
+    .controls-card {
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 12px 28px rgba(36, 91, 125, 0.16);
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+    }
+
+    .title-card {
+      max-width: min(520px, calc(100vw - 28px));
+      padding: 14px 16px 12px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      margin: 0;
+      font-size: clamp(15px, 2.4vw, 20px);
+      font-weight: 700;
+    }
+
+    .status {
+      min-height: 28px;
+      margin-top: 9px;
+      color: #33627f;
+      font-size: clamp(15px, 2.2vw, 19px);
+      font-weight: 700;
+    }
+
+    .controls-card {
+      min-width: 190px;
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .level-label {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .buttons {
+      display: grid;
+      gap: 8px;
+    }
+
+    .audio-buttons {
+      display: grid;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--ink);
+      font: 800 16px/1 Arial, Helvetica, sans-serif;
+      cursor: pointer;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 6px 14px rgba(40, 86, 118, 0.14);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14), 0 4px 10px rgba(40, 86, 118, 0.12);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.52;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    #resetButton {
+      background: linear-gradient(180deg, #ffe280, var(--button));
+      border-bottom: 2px solid var(--button-dark);
+    }
+
+    #nextButton {
+      background: linear-gradient(180deg, #a3efae, var(--button-next));
+      border-bottom: 2px solid var(--button-next-dark);
+    }
+
+    #soundButton {
+      background: linear-gradient(180deg, #b8f3ff, #72dff2);
+      border-bottom: 2px solid #26a7c0;
+    }
+
+    #voiceButton {
+      background: linear-gradient(180deg, #ffd5e6, #ff9cc4);
+      border-bottom: 2px solid #dd6c9d;
+    }
+
+    .audio-buttons button {
+      min-height: 40px;
+      font-size: 14px;
+    }
+
+    .drag-note {
+      position: fixed;
+      left: 50%;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      z-index: 9;
+      transform: translateX(-50%);
+      max-width: calc(100vw - 28px);
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.74);
+      color: #31617d;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(36, 91, 125, 0.12);
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .hud {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .title-card,
+      .controls-card {
+        width: 100%;
+      }
+
+      .controls-card {
+        min-width: 0;
+        grid-template-columns: 1fr;
+      }
+
+      .buttons,
+      .audio-buttons {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .title-card {
+        padding: 12px;
+      }
+
+      .buttons,
+      .audio-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        min-height: 42px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="scene-container" aria-label="Game Đoàn tàu số"></main>
+
+  <section class="hud" aria-label="Thông tin trò chơi">
+    <div class="title-card">
+      <h1>Đoàn tàu số</h1>
+      <p class="hint">Kéo các toa tàu vào đúng thứ tự nhé!</p>
+      <div id="statusText" class="status" aria-live="polite">Xếp từ số nhỏ đến số lớn để tàu chạy.</div>
+    </div>
+
+    <div class="controls-card">
+      <div id="levelLabel" class="level-label">Level 1 / 8</div>
+      <div class="buttons">
+        <button id="resetButton" type="button">Chơi lại</button>
+        <button id="nextButton" type="button" disabled>Level tiếp theo</button>
+      </div>
+      <div class="audio-buttons" aria-label="Âm thanh">
+        <button id="soundButton" type="button" aria-pressed="false">Bật âm thanh</button>
+        <button id="voiceButton" type="button">Nghe hướng dẫn</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="drag-note">Chạm và kéo toa tàu, rồi thả vào ô trên đường ray.</div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
+
+    let scene;
+    let camera;
+    let renderer;
+    let raycaster;
+    let pointer;
+    let dragPlane;
+    let trainGroup;
+    let slotGroup;
+    let trackGroup;
+    let effectsGroup;
+    let ground;
+    let successLight;
+    let lastFrameTime = 0;
+
+    const container = document.getElementById('scene-container');
+    const statusText = document.getElementById('statusText');
+    const levelLabel = document.getElementById('levelLabel');
+    const resetButton = document.getElementById('resetButton');
+    const nextButton = document.getElementById('nextButton');
+    const soundButton = document.getElementById('soundButton');
+    const voiceButton = document.getElementById('voiceButton');
+
+    const game = {
+      currentLevel: 0,
+      selectedCar: null,
+      cars: [],
+      slots: [],
+      isAnimating: false,
+      levelComplete: false,
+      levelSizes: [3, 4, 5, 6, 7, 8, 9, 10],
+      unlockedLevel: 0,
+      layoutSpacing: 2.35,
+      dragOffset: new THREE.Vector3(),
+      dragPoint: new THREE.Vector3(),
+      dragStartSlot: null,
+      animationStart: 0,
+      animationDuration: 3300,
+      runDistance: 12,
+      confetti: [],
+      successMessages: ['Giỏi lắm! Tàu chạy rồi!', 'Tuyệt vời! Đoàn tàu xuất phát!', 'Hay quá! Các toa đã vào đúng chỗ!'],
+      gentleHints: ['Thử toa khác nhé!', 'Con tìm số nhỏ hơn trước nhé!', 'Đổi chỗ hai toa xem sao nhé!'],
+      wrongGuidanceMessages: [
+        'Mình thử tìm số nhỏ hơn đặt bên trái trước nhé.',
+        'Toa này cần đứng sau số nhỏ hơn nhé.',
+        'Con nhìn số trên toa rồi xếp từ một đến lớn hơn nhé.',
+        'Mình đổi toa này với toa có số nhỏ hơn xem sao nhé.'
+      ]
+    };
+
+    const audio = {
+      context: null,
+      masterGain: null,
+      musicGain: null,
+      sfxGain: null,
+      musicTimer: null,
+      musicStep: 0,
+      lastGuidanceTime: 0,
+      guidanceCooldown: 1800,
+      enabled: false,
+      supported: Boolean(window.AudioContext || window.webkitAudioContext),
+      speechSupported: 'speechSynthesis' in window,
+      melody: [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23]
+    };
+
+    init();
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xb9ecff);
+      scene.fog = new THREE.Fog(0xb9ecff, 20, 46);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      pointer = new THREE.Vector2();
+      dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+      addLights();
+      addWorld();
+      bindEvents();
+      startLevel(0);
+      requestAnimationFrame(animate);
+    }
+
+    function addLights() {
+      const ambient = new THREE.HemisphereLight(0xffffff, 0x76b765, 2.6);
+      scene.add(ambient);
+
+      const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+      sun.position.set(-5, 9, 8);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.camera.left = -12;
+      sun.shadow.camera.right = 12;
+      sun.shadow.camera.top = 12;
+      sun.shadow.camera.bottom = -12;
+      scene.add(sun);
+
+      successLight = new THREE.PointLight(0xfff0a8, 0, 14);
+      successLight.position.set(0, 5, 2.4);
+      scene.add(successLight);
+    }
+
+    function addWorld() {
+      const groundGeometry = new THREE.PlaneGeometry(80, 80);
+      const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x8bdd77 });
+      ground = new THREE.Mesh(groundGeometry, groundMaterial);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.04;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      addCloud(-7.5, 6.2, -4, 1.1);
+      addCloud(7.2, 5.7, -5.5, 0.9);
+      addCloud(0.8, 7.1, -7, 1.25);
+    }
+
+    function addCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      const material = new THREE.MeshLambertMaterial({ color: 0xffffff });
+      const parts = [
+        [-0.7, 0, 0, 0.55],
+        [0, 0.12, 0, 0.72],
+        [0.72, 0, 0, 0.5],
+        [0.28, -0.12, 0.05, 0.45]
+      ];
+
+      parts.forEach(([px, py, pz, radius]) => {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), material);
+        puff.position.set(px, py, pz);
+        cloud.add(puff);
+      });
+
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+      scene.add(cloud);
+    }
+
+    function bindEvents() {
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+      renderer.domElement.addEventListener('pointerup', onPointerUp);
+      renderer.domElement.addEventListener('pointercancel', onPointerUp);
+      window.addEventListener('resize', onWindowResize);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+
+      resetButton.addEventListener('click', resetLevel);
+      nextButton.addEventListener('click', nextLevel);
+      soundButton.addEventListener('click', toggleSound);
+      voiceButton.addEventListener('click', speakInstruction);
+      updateAudioUi();
+    }
+
+    function createTrainCar(number) {
+      const car = new THREE.Group();
+      car.name = `Toa số ${number}`;
+      car.userData.isTrainCar = true;
+      car.userData.number = number;
+      car.userData.currentSlotIndex = null;
+      car.userData.wheels = [];
+
+      const colors = [0xff6b6b, 0x4dabf7, 0xffd43b, 0x69db7c, 0xb197fc, 0xff922b];
+      const mainColor = colors[(number - 1) % colors.length];
+      const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: mainColor,
+        roughness: 0.46,
+        metalness: 0.03
+      });
+      const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+      const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x27313c, roughness: 0.62 });
+      const axleMaterial = new THREE.MeshStandardMaterial({ color: 0xf4f7fb, roughness: 0.42 });
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.86, 1.08), bodyMaterial);
+      body.position.y = 0.72;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      car.add(body);
+
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.28, 0.84), roofMaterial);
+      roof.position.y = 1.28;
+      roof.castShadow = true;
+      car.add(roof);
+
+      const numberTexture = createNumberTexture(number, mainColor);
+      const numberMaterial = new THREE.MeshBasicMaterial({
+        map: numberTexture,
+        transparent: true
+      });
+
+      const sideNumber = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.64), numberMaterial);
+      sideNumber.position.set(0, 0.78, 0.552);
+      sideNumber.renderOrder = 2;
+      car.add(sideNumber);
+
+      const topNumber = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.54), numberMaterial.clone());
+      topNumber.material.map = numberTexture;
+      topNumber.position.set(0, 1.425, 0);
+      topNumber.rotation.x = -Math.PI / 2;
+      topNumber.renderOrder = 2;
+      car.add(topNumber);
+
+      const wheelGeometry = new THREE.CylinderGeometry(0.22, 0.22, 0.18, 28);
+      const wheelPositions = [
+        [-0.49, 0.22, 0.62],
+        [0.49, 0.22, 0.62],
+        [-0.49, 0.22, -0.62],
+        [0.49, 0.22, -0.62]
+      ];
+
+      wheelPositions.forEach((position) => {
+        const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        wheel.rotation.x = Math.PI / 2;
+        wheel.position.set(position[0], position[1], position[2]);
+        wheel.castShadow = true;
+        car.userData.wheels.push(wheel);
+        car.add(wheel);
+      });
+
+      const frontAxle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 1.38), axleMaterial);
+      frontAxle.position.set(-0.49, 0.22, 0);
+      car.add(frontAxle);
+
+      const backAxle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 1.38), axleMaterial);
+      backAxle.position.set(0.49, 0.22, 0);
+      car.add(backAxle);
+
+      return car;
+    }
+
+    function createNumberTexture(number, color) {
+      const size = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, size, size);
+      context.imageSmoothingEnabled = true;
+
+      const radius = 76;
+      context.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      roundedRect(context, 46, 56, 420, 400, radius);
+      context.fill();
+
+      context.lineWidth = 24;
+      context.strokeStyle = `#${color.toString(16).padStart(6, '0')}`;
+      roundedRect(context, 46, 56, 420, 400, radius);
+      context.stroke();
+
+      context.fillStyle = '#15324a';
+      const fontSize = String(number).length > 1 ? 220 : 280;
+      context.font = `900 ${fontSize}px Arial, Helvetica, sans-serif`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(String(number), size / 2, size / 2 + 18);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = true;
+      if (renderer) {
+        texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+      }
+      return texture;
+    }
+
+    function roundedRect(context, x, y, width, height, radius) {
+      if (typeof context.roundRect === 'function') {
+        context.beginPath();
+        context.roundRect(x, y, width, height, radius);
+        return;
+      }
+
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.arcTo(x + width, y, x + width, y + height, radius);
+      context.arcTo(x + width, y + height, x, y + height, radius);
+      context.arcTo(x, y + height, x, y, radius);
+      context.arcTo(x, y, x + width, y, radius);
+      context.closePath();
+    }
+
+    function createSlots(count) {
+      game.slots = [];
+      const positions = getSlotPositions(count);
+      const slotMaterial = new THREE.MeshStandardMaterial({
+        color: 0xfff4a3,
+        roughness: 0.72,
+        transparent: true,
+        opacity: 0.72
+      });
+      const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xffc53d, roughness: 0.55 });
+
+      positions.forEach((position, index) => {
+        const slot = {
+          index,
+          position,
+          occupant: null
+        };
+        game.slots.push(slot);
+
+        const pad = new THREE.Group();
+        pad.position.copy(position);
+        pad.name = `Slot ${index + 1}`;
+
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.08, 1.56), slotMaterial);
+        base.position.y = 0.02;
+        base.receiveShadow = true;
+        pad.add(base);
+
+        const frontEdge = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.1, 0.08), edgeMaterial);
+        frontEdge.position.set(0, 0.08, 0.82);
+        pad.add(frontEdge);
+
+        const backEdge = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.1, 0.08), edgeMaterial);
+        backEdge.position.set(0, 0.08, -0.82);
+        pad.add(backEdge);
+
+        const leftEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 1.56), edgeMaterial);
+        leftEdge.position.set(-0.9, 0.08, 0);
+        pad.add(leftEdge);
+
+        const rightEdge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 1.56), edgeMaterial);
+        rightEdge.position.set(0.9, 0.08, 0);
+        pad.add(rightEdge);
+
+        slotGroup.add(pad);
+      });
+
+      return game.slots;
+    }
+
+    function shuffle(array) {
+      const copy = array.slice();
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startLevel(levelIndex) {
+      const safeLevel = THREE.MathUtils.clamp(levelIndex, 0, game.levelSizes.length - 1);
+      game.currentLevel = safeLevel;
+      game.isAnimating = false;
+      game.levelComplete = false;
+      game.selectedCar = null;
+      game.animationStart = 0;
+      game.confetti = [];
+      successLight.intensity = 0;
+
+      clearLevelObjects();
+
+      trainGroup = new THREE.Group();
+      slotGroup = new THREE.Group();
+      trackGroup = new THREE.Group();
+      effectsGroup = new THREE.Group();
+      scene.add(trackGroup, slotGroup, trainGroup, effectsGroup);
+
+      const count = game.levelSizes[game.currentLevel];
+      game.layoutSpacing = getResponsiveSpacing(count);
+      createTrack(count);
+      createSlots(count);
+
+      const numbers = shuffleUntilDifferent([...Array(count)].map((_, index) => index + 1));
+      numbers.forEach((number, slotIndex) => {
+        const car = createTrainCar(number);
+        const slot = game.slots[slotIndex];
+        car.position.set(slot.position.x, 0, slot.position.z);
+        car.userData.currentSlotIndex = slotIndex;
+        slot.occupant = car;
+        game.cars.push(car);
+        trainGroup.add(car);
+      });
+
+      updateCameraForLevel();
+      updateUi();
+      setStatus('Xếp từ số nhỏ đến số lớn để tàu chạy.');
+    }
+
+    function shuffleUntilDifferent(numbers) {
+      if (numbers.length <= 1) {
+        return numbers;
+      }
+
+      let shuffled = numbers;
+      let attempts = 0;
+      do {
+        shuffled = shuffle(numbers);
+        attempts += 1;
+      } while (attempts < 8 && shuffled.every((number, index) => number === index + 1));
+
+      if (shuffled.every((number, index) => number === index + 1)) {
+        [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+      }
+
+      return shuffled;
+    }
+
+    function createTrack(count) {
+      const positions = getSlotPositions(count);
+      const first = positions[0].x;
+      const last = positions[positions.length - 1].x;
+      const railLength = Math.max(last - first + 2.4, 6.2);
+      const railMaterial = new THREE.MeshStandardMaterial({ color: 0x7f8da0, roughness: 0.4, metalness: 0.18 });
+      const sleeperMaterial = new THREE.MeshStandardMaterial({ color: 0x8a5a36, roughness: 0.72 });
+
+      [-0.55, 0.55].forEach((z) => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(railLength, 0.12, 0.12), railMaterial);
+        rail.position.set(0, 0.16, z);
+        rail.castShadow = true;
+        rail.receiveShadow = true;
+        trackGroup.add(rail);
+      });
+
+      const sleeperCount = Math.ceil(railLength / 0.65);
+      for (let i = 0; i < sleeperCount; i += 1) {
+        const x = -railLength / 2 + i * 0.65 + 0.25;
+        const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 1.62), sleeperMaterial);
+        sleeper.position.set(x, 0.08, 0);
+        sleeper.castShadow = true;
+        sleeper.receiveShadow = true;
+        trackGroup.add(sleeper);
+      }
+    }
+
+    function checkOrder() {
+      if (game.isAnimating || game.levelComplete) {
+        return false;
+      }
+
+      const complete = game.slots.every((slot, index) => slot.occupant && slot.occupant.userData.number === index + 1);
+      if (complete) {
+        playSuccessAnimation();
+        return true;
+      }
+
+      const hint = randomFrom(game.gentleHints);
+      setStatus(hint);
+      playWrongGuidance(hint);
+      return false;
+    }
+
+    function playSuccessAnimation() {
+      if (game.isAnimating) {
+        return;
+      }
+
+      game.isAnimating = true;
+      game.levelComplete = true;
+      game.selectedCar = null;
+      game.animationStart = performance.now();
+      trainGroup.position.x = 0;
+      createConfetti();
+      playSuccessSound();
+      setStatus(randomFrom(game.successMessages));
+
+      game.unlockedLevel = Math.max(game.unlockedLevel, Math.min(game.currentLevel + 1, game.levelSizes.length - 1));
+      updateUi();
+    }
+
+    function resetLevel() {
+      startLevel(game.currentLevel);
+    }
+
+    function nextLevel() {
+      if (game.currentLevel >= game.levelSizes.length - 1) {
+        return;
+      }
+
+      startLevel(game.currentLevel + 1);
+      playSoftChime();
+    }
+
+    function onPointerDown(event) {
+      if (game.isAnimating || game.levelComplete || event.button > 0) {
+        return;
+      }
+
+      updatePointer(event);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(game.cars, true);
+      const car = hits.length ? findCarRoot(hits[0].object) : null;
+
+      if (!car) {
+        return;
+      }
+
+      const planePoint = getPointerPlanePoint();
+      if (!planePoint) {
+        return;
+      }
+
+      event.preventDefault();
+      renderer.domElement.setPointerCapture(event.pointerId);
+      resumeAudioAfterGesture();
+
+      game.selectedCar = car;
+      game.dragStartSlot = car.userData.currentSlotIndex;
+      game.dragOffset.copy(car.position).sub(planePoint);
+      game.dragOffset.y = 0;
+      car.position.y = 0.42;
+      car.scale.setScalar(1.06);
+      car.traverse((child) => {
+        if (child.isMesh) {
+          child.renderOrder = 4;
+        }
+      });
+      setStatus(`Con đang cầm toa số ${car.userData.number}.`);
+    }
+
+    function onPointerMove(event) {
+      if (!game.selectedCar || game.isAnimating) {
+        return;
+      }
+
+      event.preventDefault();
+      updatePointer(event);
+      const planePoint = getPointerPlanePoint();
+      if (!planePoint) {
+        return;
+      }
+
+      const maxX = getLayoutHalfWidth(game.slots.length) + 1.5;
+      const nextX = THREE.MathUtils.clamp(planePoint.x + game.dragOffset.x, -maxX, maxX);
+      const nextZ = THREE.MathUtils.clamp(planePoint.z + game.dragOffset.z, -2.2, 1.8);
+      game.selectedCar.position.set(nextX, 0.42, nextZ);
+    }
+
+    function onPointerUp(event) {
+      if (!game.selectedCar) {
+        return;
+      }
+
+      event.preventDefault();
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+
+      const car = game.selectedCar;
+      game.selectedCar = null;
+      car.scale.setScalar(1);
+      car.traverse((child) => {
+        if (child.isMesh) {
+          child.renderOrder = 0;
+        }
+      });
+
+      const nearestSlot = findNearestSlot(car.position);
+      snapCarToSlot(car, nearestSlot.index);
+      playDropSound();
+      checkOrder();
+    }
+
+    function snapCarToSlot(car, targetIndex) {
+      const originIndex = car.userData.currentSlotIndex;
+      const targetSlot = game.slots[targetIndex];
+      const originSlot = originIndex === null ? null : game.slots[originIndex];
+      const targetCar = targetSlot.occupant === car ? null : targetSlot.occupant;
+
+      if (targetCar && originSlot) {
+        originSlot.occupant = targetCar;
+        targetCar.userData.currentSlotIndex = originIndex;
+        setCarOnSlot(targetCar, originSlot);
+      } else if (originSlot && originSlot.occupant === car) {
+        originSlot.occupant = null;
+      }
+
+      targetSlot.occupant = car;
+      car.userData.currentSlotIndex = targetIndex;
+      setCarOnSlot(car, targetSlot);
+    }
+
+    function setCarOnSlot(car, slot) {
+      car.position.set(slot.position.x, 0, slot.position.z);
+    }
+
+    function findNearestSlot(position) {
+      let nearest = game.slots[0];
+      let bestDistance = Infinity;
+
+      game.slots.forEach((slot) => {
+        const dx = position.x - slot.position.x;
+        const dz = position.z - slot.position.z;
+        const distance = dx * dx + dz * dz;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          nearest = slot;
+        }
+      });
+
+      return nearest;
+    }
+
+    function findCarRoot(object) {
+      let current = object;
+      while (current) {
+        if (current.userData && current.userData.isTrainCar) {
+          return current;
+        }
+        current = current.parent;
+      }
+      return null;
+    }
+
+    function updatePointer(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function getPointerPlanePoint() {
+      raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.ray.intersectPlane(dragPlane, game.dragPoint);
+      return hit ? game.dragPoint : null;
+    }
+
+    async function toggleSound() {
+      if (!audio.supported) {
+        setStatus('Trình duyệt này chưa hỗ trợ âm thanh nền.');
+        return;
+      }
+
+      if (audio.enabled) {
+        audio.enabled = false;
+        stopBackgroundMusic();
+        cancelSpeech();
+      } else {
+        await ensureAudio();
+        audio.enabled = true;
+        startBackgroundMusic();
+        playSoftChime();
+      }
+
+      updateAudioUi();
+    }
+
+    async function ensureAudio() {
+      if (!audio.supported) {
+        return;
+      }
+
+      if (!audio.context) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audio.context = new AudioContextClass();
+        audio.masterGain = audio.context.createGain();
+        audio.musicGain = audio.context.createGain();
+        audio.sfxGain = audio.context.createGain();
+
+        audio.masterGain.gain.value = 0.72;
+        audio.musicGain.gain.value = 0.055;
+        audio.sfxGain.gain.value = 0.22;
+        audio.musicGain.connect(audio.masterGain);
+        audio.sfxGain.connect(audio.masterGain);
+        audio.masterGain.connect(audio.context.destination);
+      }
+
+      if (audio.context.state === 'suspended') {
+        await audio.context.resume();
+      }
+    }
+
+    function startBackgroundMusic() {
+      if (!audio.enabled || !audio.context || audio.musicTimer) {
+        return;
+      }
+
+      playMusicStep();
+      audio.musicTimer = window.setInterval(playMusicStep, 560);
+    }
+
+    function stopBackgroundMusic() {
+      if (audio.musicTimer) {
+        window.clearInterval(audio.musicTimer);
+        audio.musicTimer = null;
+      }
+    }
+
+    function playMusicStep() {
+      if (!audio.enabled || !audio.context || audio.context.state !== 'running') {
+        return;
+      }
+
+      const frequency = audio.melody[audio.musicStep % audio.melody.length];
+      audio.musicStep += 1;
+      playTone({
+        frequency,
+        startTime: audio.context.currentTime,
+        duration: 0.34,
+        type: 'sine',
+        gainNode: audio.musicGain,
+        volume: 0.9
+      });
+    }
+
+    function playSuccessSound() {
+      if (!audio.enabled || !audio.context) {
+        return;
+      }
+
+      const now = audio.context.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((frequency, index) => {
+        playTone({
+          frequency,
+          startTime: now + index * 0.12,
+          duration: 0.28,
+          type: 'triangle',
+          gainNode: audio.sfxGain,
+          volume: 1.2
+        });
+      });
+
+      playTrainWhistle(now + 0.48);
+    }
+
+    function playTrainWhistle(startTime) {
+      if (!audio.context) {
+        return;
+      }
+
+      const oscillator = audio.context.createOscillator();
+      const gain = audio.context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(620, startTime);
+      oscillator.frequency.linearRampToValueAtTime(860, startTime + 0.18);
+      oscillator.frequency.linearRampToValueAtTime(690, startTime + 0.44);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.58, startTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.5);
+      oscillator.connect(gain);
+      gain.connect(audio.sfxGain);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.52);
+    }
+
+    function playDropSound() {
+      if (!audio.enabled || !audio.context) {
+        return;
+      }
+
+      playTone({
+        frequency: 440,
+        startTime: audio.context.currentTime,
+        duration: 0.11,
+        type: 'triangle',
+        gainNode: audio.sfxGain,
+        volume: 0.42
+      });
+    }
+
+    function playWrongGuidance(statusHint) {
+      playGentleTryAgainSound();
+
+      if (!audio.enabled || !audio.speechSupported) {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - audio.lastGuidanceTime < audio.guidanceCooldown) {
+        return;
+      }
+
+      audio.lastGuidanceTime = now;
+      speakText(randomFrom(game.wrongGuidanceMessages), statusHint);
+    }
+
+    function playGentleTryAgainSound() {
+      if (!audio.enabled || !audio.context) {
+        return;
+      }
+
+      const now = audio.context.currentTime;
+      [392, 329.63].forEach((frequency, index) => {
+        playTone({
+          frequency,
+          startTime: now + index * 0.09,
+          duration: 0.16,
+          type: 'sine',
+          gainNode: audio.sfxGain,
+          volume: 0.34
+        });
+      });
+    }
+
+    function playSoftChime() {
+      if (!audio.enabled || !audio.context) {
+        return;
+      }
+
+      const now = audio.context.currentTime;
+      [659.25, 880].forEach((frequency, index) => {
+        playTone({
+          frequency,
+          startTime: now + index * 0.08,
+          duration: 0.18,
+          type: 'sine',
+          gainNode: audio.sfxGain,
+          volume: 0.5
+        });
+      });
+    }
+
+    function playTone({ frequency, startTime, duration, type, gainNode, volume }) {
+      const oscillator = audio.context.createOscillator();
+      const gain = audio.context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      oscillator.connect(gain);
+      gain.connect(gainNode);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration + 0.03);
+    }
+
+    function resumeAudioAfterGesture() {
+      if (!audio.enabled || !audio.context || audio.context.state === 'running') {
+        return;
+      }
+
+      ensureAudio().then(startBackgroundMusic).catch(() => {
+        setStatus('Chạm nút Bật âm thanh để nghe nhạc nhé.');
+      });
+    }
+
+    function speakInstruction() {
+      if (!audio.speechSupported) {
+        setStatus('Trình duyệt này chưa hỗ trợ giọng hướng dẫn.');
+        return;
+      }
+
+      const count = game.levelSizes[game.currentLevel];
+      speakText(
+        `Kéo các toa tàu vào đúng thứ tự từ một đến ${count}. Con thử tìm số nhỏ hơn trước nhé.`,
+        'Hãy nghe hướng dẫn rồi kéo toa tàu nhé.'
+      );
+    }
+
+    function speakText(text, statusMessage) {
+      if (!audio.speechSupported) {
+        return false;
+      }
+
+      cancelSpeech();
+      duckMusicForSpeech();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      utterance.rate = 0.86;
+      utterance.pitch = 1.08;
+      utterance.volume = 0.95;
+      utterance.onend = restoreMusicAfterSpeech;
+      utterance.onerror = restoreMusicAfterSpeech;
+
+      const voices = window.speechSynthesis.getVoices();
+      const vietnameseVoice = voices.find((voice) => voice.lang && voice.lang.toLowerCase().startsWith('vi'));
+      if (vietnameseVoice) {
+        utterance.voice = vietnameseVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+      if (statusMessage) {
+        setStatus(statusMessage);
+      }
+      return true;
+    }
+
+    function duckMusicForSpeech() {
+      if (!audio.enabled || !audio.context || !audio.musicGain) {
+        return;
+      }
+
+      audio.musicGain.gain.setTargetAtTime(0.018, audio.context.currentTime, 0.05);
+    }
+
+    function restoreMusicAfterSpeech() {
+      if (!audio.enabled || !audio.context || !audio.musicGain) {
+        return;
+      }
+
+      audio.musicGain.gain.setTargetAtTime(0.055, audio.context.currentTime, 0.08);
+    }
+
+    function cancelSpeech() {
+      if (audio.speechSupported) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function updateAudioUi() {
+      soundButton.disabled = !audio.supported;
+      soundButton.textContent = audio.enabled ? 'Tắt âm thanh' : 'Bật âm thanh';
+      soundButton.setAttribute('aria-pressed', String(audio.enabled));
+
+      voiceButton.disabled = !audio.speechSupported;
+      voiceButton.textContent = audio.speechSupported ? 'Nghe hướng dẫn' : 'Không có giọng nói';
+    }
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        stopBackgroundMusic();
+        return;
+      }
+
+      if (audio.enabled) {
+        startBackgroundMusic();
+      }
+    }
+
+    function createConfetti() {
+      game.confetti = [];
+      clearGroup(effectsGroup);
+
+      const colors = [0xff6b6b, 0x4dabf7, 0xffd43b, 0x69db7c, 0xb197fc, 0xff922b, 0xffffff];
+      const confettiGeometry = new THREE.BoxGeometry(0.12, 0.035, 0.12);
+      const starGeometry = new THREE.SphereGeometry(0.08, 10, 8);
+
+      for (let i = 0; i < 76; i += 1) {
+        const material = new THREE.MeshBasicMaterial({ color: colors[i % colors.length] });
+        const isStar = i % 5 === 0;
+        const piece = new THREE.Mesh(isStar ? starGeometry : confettiGeometry, material);
+        piece.position.set(
+          THREE.MathUtils.randFloat(-getLayoutHalfWidth(game.slots.length), getLayoutHalfWidth(game.slots.length)),
+          THREE.MathUtils.randFloat(2.1, 4.6),
+          THREE.MathUtils.randFloat(-0.9, 1.2)
+        );
+        piece.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        piece.userData.velocity = new THREE.Vector3(
+          THREE.MathUtils.randFloat(-0.9, 1.4),
+          THREE.MathUtils.randFloat(0.8, 2.2),
+          THREE.MathUtils.randFloat(-0.45, 0.45)
+        );
+        piece.userData.spin = new THREE.Vector3(
+          THREE.MathUtils.randFloat(-4, 4),
+          THREE.MathUtils.randFloat(-5, 5),
+          THREE.MathUtils.randFloat(-4, 4)
+        );
+        game.confetti.push(piece);
+        effectsGroup.add(piece);
+      }
+    }
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min((time - lastFrameTime) / 1000 || 0, 0.033);
+      lastFrameTime = time;
+
+      animateIdleCars(time);
+      animateSuccess(time, delta);
+      renderer.render(scene, camera);
+    }
+
+    function animateIdleCars(time) {
+      if (game.isAnimating || game.selectedCar) {
+        return;
+      }
+
+      const bob = Math.sin(time * 0.0022) * 0.015;
+      game.cars.forEach((car) => {
+        car.position.y = bob;
+      });
+    }
+
+    function animateSuccess(time, delta) {
+      if (!game.isAnimating) {
+        return;
+      }
+
+      const elapsed = time - game.animationStart;
+      const progress = THREE.MathUtils.clamp(elapsed / game.animationDuration, 0, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      trainGroup.position.x = eased * game.runDistance;
+      successLight.intensity = Math.sin(progress * Math.PI) * 3.2;
+
+      game.cars.forEach((car) => {
+        car.userData.wheels.forEach((wheel) => {
+          wheel.rotation.y -= delta * 9.5;
+        });
+      });
+
+      game.confetti.forEach((piece) => {
+        piece.userData.velocity.y -= 3.5 * delta;
+        piece.position.addScaledVector(piece.userData.velocity, delta);
+        piece.rotation.x += piece.userData.spin.x * delta;
+        piece.rotation.y += piece.userData.spin.y * delta;
+        piece.rotation.z += piece.userData.spin.z * delta;
+
+        if (piece.position.y < 0.25) {
+          piece.position.y = THREE.MathUtils.randFloat(3.2, 5.1);
+          piece.position.x = THREE.MathUtils.randFloat(-getLayoutHalfWidth(game.slots.length), getLayoutHalfWidth(game.slots.length));
+          piece.userData.velocity.y = THREE.MathUtils.randFloat(0.4, 1.5);
+        }
+      });
+
+      if (progress >= 1) {
+        game.isAnimating = false;
+        successLight.intensity = 0;
+        if (game.currentLevel === game.levelSizes.length - 1) {
+          setStatus('Tàu chạy rồi! Con đã hoàn thành tất cả level.');
+        } else {
+          setStatus('Tàu chạy rồi! Sẵn sàng qua level tiếp theo.');
+        }
+        updateUi();
+      }
+    }
+
+    function updateUi() {
+      levelLabel.textContent = `Level ${game.currentLevel + 1} / ${game.levelSizes.length}`;
+      const hasNext = game.currentLevel < game.levelSizes.length - 1;
+      const canGoNext = hasNext && game.unlockedLevel > game.currentLevel;
+      nextButton.disabled = !canGoNext;
+      nextButton.textContent = hasNext ? 'Level tiếp theo' : 'Hoàn thành';
+    }
+
+    function setStatus(message) {
+      statusText.textContent = message;
+    }
+
+    function randomFrom(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function getSlotPositions(count) {
+      const spacing = game.layoutSpacing || getResponsiveSpacing(count);
+      const startX = -((count - 1) * spacing) / 2;
+      return [...Array(count)].map((_, index) => new THREE.Vector3(startX + index * spacing, 0, 0));
+    }
+
+    function getResponsiveSpacing(count) {
+      const narrow = window.innerWidth < 640;
+      const tablet = window.innerWidth < 920;
+
+      if (narrow && count >= 9) {
+        return 1.72;
+      }
+      if (narrow && count >= 7) {
+        return 1.78;
+      }
+      if (narrow && count >= 5) {
+        return 1.86;
+      }
+      if (narrow) {
+        return 2.05;
+      }
+
+      if (tablet && count >= 9) {
+        return 1.9;
+      }
+      if (tablet && count >= 7) {
+        return 2.05;
+      }
+
+      if (count >= 9) {
+        return 2.1;
+      }
+
+      return 2.35;
+    }
+
+    function getLayoutHalfWidth(count) {
+      return ((count - 1) * game.layoutSpacing) / 2 + 0.95;
+    }
+
+    function updateCameraForLevel() {
+      const count = game.levelSizes[game.currentLevel];
+      const worldWidth = getLayoutHalfWidth(count) * 2 + 1.5;
+      const aspect = window.innerWidth / window.innerHeight;
+      const verticalViewNeeded = Math.max(8.2, worldWidth / Math.max(aspect, 0.52));
+      const fov = THREE.MathUtils.degToRad(camera.fov);
+      const distance = verticalViewNeeded / (2 * Math.tan(fov / 2));
+      const cameraDirection = new THREE.Vector3(0, 0.56, 1).normalize();
+      const finalDistance = THREE.MathUtils.clamp(distance, 10.5, 46);
+
+      camera.aspect = aspect;
+      camera.position.copy(cameraDirection.multiplyScalar(finalDistance));
+      camera.lookAt(0, 0.42, 0);
+      camera.updateProjectionMatrix();
+    }
+
+    function onWindowResize() {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const nextSpacing = getResponsiveSpacing(game.levelSizes[game.currentLevel]);
+      if (Math.abs(nextSpacing - game.layoutSpacing) > 0.01) {
+        startLevel(game.currentLevel);
+        return;
+      }
+
+      updateCameraForLevel();
+    }
+
+    function clearLevelObjects() {
+      game.cars = [];
+      game.slots = [];
+      game.confetti = [];
+
+      [trainGroup, slotGroup, trackGroup, effectsGroup].forEach((group) => {
+        if (group) {
+          scene.remove(group);
+          disposeObject(group);
+        }
+      });
+    }
+
+    function clearGroup(group) {
+      while (group.children.length) {
+        const child = group.children.pop();
+        disposeObject(child);
+      }
+    }
+
+    function disposeObject(object) {
+      object.traverse((child) => {
+        if (!child.isMesh) {
+          return;
+        }
+
+        if (child.geometry) {
+          child.geometry.dispose();
+        }
+
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((material) => {
+          if (!material) {
+            return;
+          }
+          if (material.map) {
+            material.map.dispose();
+          }
+          material.dispose();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
