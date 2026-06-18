@@ -146,6 +146,19 @@
       font-size: clamp(13px, 2vw, 16px);
     }
 
+    .asset-credit {
+      margin-top: 6px;
+      color: #7b8a97;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .asset-credit a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
     .controls {
       padding: 10px;
       display: flex;
@@ -237,6 +250,7 @@
     <div class="result-card">
       <div class="result-main" id="resultMain">Bên nào nhiều hơn?</div>
       <div class="result-sub" id="resultSub">Kéo nhẹ sang bên có số lượng lớn hơn.</div>
+      <div class="asset-credit">Model 3D: <a href="https://poly.pizza/m/fnUp2MrGjmr" target="_blank" rel="noopener noreferrer">Crocodile by jeremy / Poly Pizza (CC-BY 3.0)</a></div>
     </div>
     <div class="controls">
       <a class="nav-link" href="../index.html">Trang chủ</a>
@@ -248,35 +262,23 @@
   <div class="error-card" id="errorCard"></div>
 
   <script type="module">
-    const CDN_URLS = [
-      'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js',
-      'https://unpkg.com/three@0.164.1/build/three.module.js'
-    ];
-
-    async function loadThree() {
-      let lastError;
-      for (const url of CDN_URLS) {
-        try {
-          return await import(url);
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error('Không tải được Three.js');
-    }
-
     const errorCard = document.getElementById('errorCard');
     const loading = document.getElementById('loading');
 
     try {
-      const THREE = await loadThree();
-      startGame(THREE);
+      if (window.location.protocol === 'file:') {
+        throw new Error('Game này cần mở qua local server. Hãy chạy "python3 -m http.server 5173" trong thư mục Games rồi vào http://localhost:5173/crocodile/');
+      }
+
+      const THREE = await import('./vendor/three.module.js');
+      const { GLTFLoader } = await import('./vendor/GLTFLoader.js');
+      await startGame(THREE, GLTFLoader);
     } catch (error) {
       loading.style.display = 'none';
       errorCard.style.display = 'block';
       errorCard.textContent = [
-        'Không tải được Three.js nên game chưa thể hiển thị.',
-        'Hãy chạy bằng local server hoặc kiểm tra mạng/CDN.',
+        'Không tải được thư viện hoặc model 3D nên game chưa thể hiển thị.',
+        'Hãy chạy bằng local server hoặc kiểm tra lại file trong thư mục game.',
         'Ví dụ: python3 -m http.server 5173',
         '',
         String(error?.message || error)
@@ -284,9 +286,7 @@
       console.error(error);
     }
 
-    function startGame(THREE) {
-      loading.style.display = 'none';
-
+    async function startGame(THREE, GLTFLoader) {
       const app = document.getElementById('app');
       const instruction = document.getElementById('instruction');
       const resultMain = document.getElementById('resultMain');
@@ -344,13 +344,14 @@
       const rightGroup = new THREE.Group();
       const labelGroup = new THREE.Group();
       const confettiGroup = new THREE.Group();
-      const crocodile = createCrocodile();
+      const crocodile = await createCrocodile();
 
       root.add(leftGroup, rightGroup, labelGroup, confettiGroup, crocodile);
 
       setupLights();
       createWorld();
       startRound();
+      loading.style.display = 'none';
       animate();
 
       resetBtn.addEventListener('click', resetRound);
@@ -447,7 +448,67 @@
         }
       }
 
-      function createCrocodile() {
+      async function createCrocodile() {
+        const loader = new GLTFLoader();
+
+        try {
+          const gltf = await loader.loadAsync('./assets/crocodile.glb');
+          const group = new THREE.Group();
+          group.position.copy(state.crocodileStart);
+          group.userData.draggable = true;
+
+          const model = gltf.scene || gltf.scenes?.[0];
+          if (!model) throw new Error('Model cá sấu không có scene hợp lệ.');
+
+          model.traverse((child) => {
+            if (!child.isMesh) return;
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            if (Array.isArray(child.material)) {
+              child.material = child.material.map((material) => material.clone());
+              child.material.forEach(tuneCrocodileMaterial);
+            } else if (child.material) {
+              child.material = child.material.clone();
+              tuneCrocodileMaterial(child.material);
+            }
+          });
+
+          const initialBounds = new THREE.Box3().setFromObject(model);
+          const initialSize = initialBounds.getSize(new THREE.Vector3());
+          const dominantLength = Math.max(initialSize.x, initialSize.z, 1);
+          const targetLength = 3.2;
+          const scaleFactor = targetLength / dominantLength;
+
+          model.scale.setScalar(scaleFactor);
+
+          const normalizedBounds = new THREE.Box3().setFromObject(model);
+          const normalizedCenter = normalizedBounds.getCenter(new THREE.Vector3());
+          const liftFromGround = 0.02;
+
+          model.position.x = -normalizedCenter.x;
+          model.position.z = -normalizedCenter.z;
+          model.position.y = -normalizedBounds.min.y + liftFromGround;
+
+          model.rotation.y = (initialSize.z > initialSize.x ? Math.PI / 2 : 0) + Math.PI;
+
+          group.add(model);
+          return group;
+        } catch (error) {
+          console.warn('Không tải được model cá sấu thật, dùng fallback procedural.', error);
+          return createProceduralCrocodile();
+        }
+      }
+
+      function tuneCrocodileMaterial(material) {
+        material.roughness = Math.min(material.roughness ?? 1, 0.88);
+        material.metalness = 0;
+        if (material.color) {
+          material.color.offsetHSL(0.01, 0.03, 0.02);
+        }
+      }
+
+      function createProceduralCrocodile() {
         const group = new THREE.Group();
         group.position.copy(state.crocodileStart);
         group.userData.draggable = true;
