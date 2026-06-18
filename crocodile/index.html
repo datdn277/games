@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cá Sấu So Sánh Số</title>
+  <style>
+    :root {
+      --bg1: #dff8ff;
+      --bg2: #fff4c7;
+      --panel: rgba(255, 255, 255, 0.86);
+      --panel-strong: rgba(255, 255, 255, 0.96);
+      --text: #16324f;
+      --muted: #5b6f82;
+      --green: #27ae60;
+      --orange: #ff9f43;
+      --blue: #30a7ff;
+      --red: #ff5d6c;
+      --shadow: rgba(31, 76, 110, 0.2);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      touch-action: none;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    .topbar {
+      position: fixed;
+      top: max(14px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(980px, calc(100vw - 24px));
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .brand, .instruction, .level-pill, .controls, .result-card, .error-card {
+      pointer-events: auto;
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 16px 42px var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .brand .emoji {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #e9fff2;
+      font-size: 21px;
+    }
+
+    .instruction {
+      padding: 12px 18px;
+      text-align: center;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.25;
+      font-weight: 800;
+      font-size: clamp(14px, 2vw, 18px);
+    }
+
+    .level-pill {
+      padding: 12px 16px;
+      font-weight: 900;
+      white-space: nowrap;
+      color: #0c6d4d;
+      background: rgba(233, 255, 242, 0.9);
+    }
+
+    .bottom-ui {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(980px, calc(100vw - 24px));
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: end;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .result-card {
+      min-height: 74px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      pointer-events: auto;
+    }
+
+    .result-main {
+      font-size: clamp(21px, 4vw, 38px);
+      font-weight: 1000;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .result-sub {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: clamp(13px, 2vw, 16px);
+    }
+
+    .controls {
+      padding: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    button,
+    .nav-link {
+      border: 0;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 900;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      transition: transform 120ms ease, filter 120ms ease;
+      min-height: 44px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: white;
+    }
+
+    button:active,
+    .nav-link:active { transform: scale(0.96); }
+    button:hover,
+    .nav-link:hover { filter: brightness(1.03); }
+    button:disabled { opacity: 0.48; cursor: default; transform: none; }
+
+    #resetBtn { background: linear-gradient(180deg, #60c6ff, #2d8bff); }
+    #nextBtn { background: linear-gradient(180deg, #ffb84d, #ff7d3a); }
+    .nav-link {
+      background: linear-gradient(180deg, #72d79a, #27ae60);
+    }
+
+    .error-card {
+      position: fixed;
+      inset: auto 18px 18px 18px;
+      z-index: 50;
+      padding: 16px 18px;
+      background: rgba(255, 245, 245, 0.96);
+      color: #9d1c2b;
+      font-weight: 800;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #1c5976;
+      font-weight: 900;
+      font-size: 20px;
+      z-index: 1;
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        grid-template-columns: 1fr auto;
+      }
+      .brand { display: none; }
+      .instruction { grid-column: 1 / span 1; text-align: left; justify-content: flex-start; }
+      .bottom-ui { grid-template-columns: 1fr; }
+      .controls { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">Đang dựng sân chơi 3D…</div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand"><span class="emoji">🐊</span><span>Cá Sấu So Sánh Số</span></div>
+    <div class="instruction" id="instruction">Giữ cá sấu ở giữa và kéo sang trái hoặc phải để xoay miệng về phía có nhiều đồ vật hơn.</div>
+    <div class="level-pill" id="levelPill">Level 1</div>
+  </div>
+
+  <div class="bottom-ui">
+    <div class="result-card">
+      <div class="result-main" id="resultMain">Bên nào nhiều hơn?</div>
+      <div class="result-sub" id="resultSub">Kéo nhẹ sang bên có số lượng lớn hơn.</div>
+    </div>
+    <div class="controls">
+      <a class="nav-link" href="../index.html">Trang chủ</a>
+      <button id="resetBtn">Chơi lại</button>
+      <button id="nextBtn" disabled>Tiếp theo</button>
+    </div>
+  </div>
+
+  <div class="error-card" id="errorCard"></div>
+
+  <script type="module">
+    const CDN_URLS = [
+      'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js',
+      'https://unpkg.com/three@0.164.1/build/three.module.js'
+    ];
+
+    async function loadThree() {
+      let lastError;
+      for (const url of CDN_URLS) {
+        try {
+          return await import(url);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error('Không tải được Three.js');
+    }
+
+    const errorCard = document.getElementById('errorCard');
+    const loading = document.getElementById('loading');
+
+    try {
+      const THREE = await loadThree();
+      startGame(THREE);
+    } catch (error) {
+      loading.style.display = 'none';
+      errorCard.style.display = 'block';
+      errorCard.textContent = [
+        'Không tải được Three.js nên game chưa thể hiển thị.',
+        'Hãy chạy bằng local server hoặc kiểm tra mạng/CDN.',
+        'Ví dụ: python3 -m http.server 5173',
+        '',
+        String(error?.message || error)
+      ].join('\n');
+      console.error(error);
+    }
+
+    function startGame(THREE) {
+      loading.style.display = 'none';
+
+      const app = document.getElementById('app');
+      const instruction = document.getElementById('instruction');
+      const resultMain = document.getElementById('resultMain');
+      const resultSub = document.getElementById('resultSub');
+      const levelPill = document.getElementById('levelPill');
+      const resetBtn = document.getElementById('resetBtn');
+      const nextBtn = document.getElementById('nextBtn');
+
+      const state = {
+        levelIndex: 0,
+        round: null,
+        completed: false,
+        dragging: false,
+        dragStartClientX: 0,
+        dragCurrentClientX: 0,
+        choice: null,
+        rotationChoice: null,
+        crocodileStart: new THREE.Vector3(0, 0.1, 0),
+        crocodileNeutralRotation: -Math.PI / 2,
+        animation: null,
+        confetti: [],
+        pairLines: [],
+        clock: new THREE.Clock()
+      };
+
+      const levels = [
+        { max: 5, rounds: [[2, 4], [5, 3], [1, 5], [4, 2]] },
+        { max: 7, rounds: [[6, 2], [4, 7], [7, 3], [2, 6]] },
+        { max: 10, rounds: [[8, 6], [4, 9], [7, 10], [9, 2], [10, 4]] }
+      ];
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xdff8ff);
+      scene.fog = new THREE.Fog(0xdff8ff, 12, 26);
+
+      const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 6.8, 10.8);
+      camera.lookAt(0, 0.4, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.04;
+      app.appendChild(renderer.domElement);
+      renderer.domElement.style.cursor = 'grab';
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const leftGroup = new THREE.Group();
+      const rightGroup = new THREE.Group();
+      const labelGroup = new THREE.Group();
+      const confettiGroup = new THREE.Group();
+      const crocodile = createCrocodile();
+
+      root.add(leftGroup, rightGroup, labelGroup, confettiGroup, crocodile);
+
+      setupLights();
+      createWorld();
+      startRound();
+      animate();
+
+      resetBtn.addEventListener('click', resetRound);
+      nextBtn.addEventListener('click', nextRound);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: false });
+      renderer.domElement.addEventListener('pointermove', onPointerMove, { passive: false });
+      renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: false });
+      renderer.domElement.addEventListener('pointercancel', onPointerUp, { passive: false });
+      window.addEventListener('resize', onResize);
+
+      function setupLights() {
+        const hemi = new THREE.HemisphereLight(0xffffff, 0x80b880, 1.3);
+        scene.add(hemi);
+
+        const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+        sun.position.set(-4, 9, 6);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        sun.shadow.camera.left = -10;
+        sun.shadow.camera.right = 10;
+        sun.shadow.camera.top = 10;
+        sun.shadow.camera.bottom = -10;
+        sun.shadow.camera.near = 1;
+        sun.shadow.camera.far = 25;
+        scene.add(sun);
+
+        const rim = new THREE.DirectionalLight(0xb9ecff, 0.9);
+        rim.position.set(6, 4, -6);
+        scene.add(rim);
+      }
+
+      function createWorld() {
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x8bd96c, roughness: 0.82, metalness: 0.02 });
+        const ground = new THREE.Mesh(new THREE.CylinderGeometry(12, 13, 0.35, 80), groundMat);
+        ground.position.y = -0.25;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const pathMat = new THREE.MeshStandardMaterial({ color: 0xffefb2, roughness: 0.9 });
+        const path = new THREE.Mesh(new THREE.BoxGeometry(12.5, 0.08, 2.1), pathMat);
+        path.position.set(0, -0.03, 0);
+        path.receiveShadow = true;
+        scene.add(path);
+
+        createPlatform(-4.05, 0x68c9ff, 'TRÁI');
+        createPlatform(4.05, 0xffbd67, 'PHẢI');
+        createClouds();
+      }
+
+      function createPlatform(x, color, label) {
+        const baseMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.04 });
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.92, 0.45, 48), baseMat);
+        base.position.set(x, 0.04, 0);
+        base.castShadow = true;
+        base.receiveShadow = true;
+        scene.add(base);
+
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(1.78, 0.06, 12, 72),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 })
+        );
+        ring.position.set(x, 0.32, 0);
+        ring.rotation.x = Math.PI / 2;
+        ring.castShadow = true;
+        scene.add(ring);
+
+        const sprite = makeTextSprite(label, {
+          fontSize: 52,
+          fontWeight: 1000,
+          color: '#ffffff',
+          bg: 'rgba(0,0,0,0)',
+          padding: 16,
+          shadow: true
+        });
+        sprite.position.set(x, 0.62, 1.45);
+        sprite.scale.set(1.3, 0.45, 1);
+        scene.add(sprite);
+      }
+
+      function createClouds() {
+        const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.75 });
+        for (let i = 0; i < 6; i++) {
+          const group = new THREE.Group();
+          const x = -8 + i * 3.2;
+          const z = -6 - (i % 2) * 0.7;
+          const y = 3.9 + (i % 3) * 0.25;
+          group.position.set(x, y, z);
+          for (let j = 0; j < 4; j++) {
+            const puff = new THREE.Mesh(new THREE.SphereGeometry(0.32 + j * 0.04, 16, 12), cloudMat);
+            puff.position.set((j - 1.5) * 0.32, Math.sin(j) * 0.08, 0);
+            group.add(puff);
+          }
+          scene.add(group);
+        }
+      }
+
+      function createCrocodile() {
+        const group = new THREE.Group();
+        group.position.copy(state.crocodileStart);
+        group.userData.draggable = true;
+
+        const green = new THREE.MeshStandardMaterial({ color: 0x2cb85e, roughness: 0.48, metalness: 0.04 });
+        const darkGreen = new THREE.MeshStandardMaterial({ color: 0x168a43, roughness: 0.55 });
+        const belly = new THREE.MeshStandardMaterial({ color: 0xf7f3a3, roughness: 0.65 });
+        const mouth = new THREE.MeshStandardMaterial({ color: 0xf1fff7, roughness: 0.5 });
+        const red = new THREE.MeshStandardMaterial({ color: 0xff7f7f, roughness: 0.7 });
+        const black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.25 });
+        const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
+
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 1.7, 8, 18), green);
+        body.rotation.z = Math.PI / 2;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        group.add(body);
+
+        const bellyMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.58), belly);
+        bellyMesh.position.set(-0.15, -0.14, 0.02);
+        bellyMesh.castShadow = true;
+        group.add(bellyMesh);
+
+        const head = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.54, 0.76), green);
+        head.position.set(0.98, 0.05, 0);
+        head.castShadow = true;
+        head.receiveShadow = true;
+        group.add(head);
+
+        const jawPivotX = 1.22;
+        const jawTop = new THREE.Group();
+        jawTop.position.set(jawPivotX, 0.12, 0);
+        jawTop.rotation.z = -0.42;
+        group.add(jawTop);
+
+        const jawBottom = new THREE.Group();
+        jawBottom.position.set(jawPivotX, -0.07, 0);
+        jawBottom.rotation.z = 0.34;
+        group.add(jawBottom);
+
+        const snoutTop = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.17, 0.72), green);
+        snoutTop.position.set(0.58, 0.11, 0);
+        snoutTop.castShadow = true;
+        snoutTop.receiveShadow = true;
+        jawTop.add(snoutTop);
+
+        const upperMouthInside = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.05, 0.62), red);
+        upperMouthInside.position.set(0.58, -0.03, 0);
+        jawTop.add(upperMouthInside);
+
+        const snoutBottom = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.15, 0.68), green);
+        snoutBottom.position.set(0.54, -0.09, 0);
+        snoutBottom.castShadow = true;
+        snoutBottom.receiveShadow = true;
+        jawBottom.add(snoutBottom);
+
+        const lowerMouthInside = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.05, 0.58), mouth);
+        lowerMouthInside.position.set(0.54, 0.02, 0);
+        jawBottom.add(lowerMouthInside);
+
+        for (let i = 0; i < 5; i++) {
+          const toothTop = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.16, 8), white);
+          toothTop.position.set(0.22 + i * 0.18, -0.01, -0.26);
+          toothTop.rotation.x = Math.PI;
+          jawTop.add(toothTop);
+
+          const toothBottom = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.16, 8), white);
+          toothBottom.position.set(0.22 + i * 0.18, 0.01, 0.26);
+          jawBottom.add(toothBottom);
+        }
+
+        const mouthGap = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.58), red);
+        mouthGap.position.set(1.32, 0.03, 0);
+        mouthGap.rotation.z = -0.04;
+        group.add(mouthGap);
+
+        for (let i = 0; i < 7; i++) {
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.18, 8), darkGreen);
+          spike.position.set(-0.85 + i * 0.28, 0.52, 0);
+          spike.castShadow = true;
+          group.add(spike);
+        }
+
+        for (const z of [-0.27, 0.27]) {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), white);
+          eye.position.set(1.18, 0.38, z);
+          eye.castShadow = true;
+          group.add(eye);
+
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 8), black);
+          pupil.position.set(1.25, 0.39, z);
+          group.add(pupil);
+        }
+
+        for (const [x, z] of [[-0.6, -0.4], [-0.6, 0.4], [0.35, -0.4], [0.35, 0.4]]) {
+          const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.18, 0.58), darkGreen);
+          leg.position.set(x, -0.28, z);
+          leg.castShadow = true;
+          group.add(leg);
+        }
+
+        const tail = new THREE.Mesh(new THREE.ConeGeometry(0.26, 1.05, 16), green);
+        tail.position.set(-1.18, 0.02, 0);
+        tail.rotation.z = Math.PI / 2;
+        tail.castShadow = true;
+        group.add(tail);
+
+        group.traverse(child => {
+          if (child.isMesh) {
+            child.userData.root = group;
+            child.castShadow = true;
+          }
+        });
+
+        return group;
+      }
+
+      function startRound() {
+        clearRoundObjects();
+        state.completed = false;
+        state.choice = null;
+        nextBtn.disabled = true;
+        crocodile.visible = true;
+        crocodile.position.copy(state.crocodileStart);
+        crocodile.rotation.set(0, state.crocodileNeutralRotation, 0);
+        state.rotationChoice = null;
+        crocodile.scale.set(1, 1, 1);
+
+        const level = levels[state.levelIndex];
+        const roundIndex = Math.floor(Math.random() * level.rounds.length);
+        const pair = level.rounds[roundIndex];
+        state.round = { left: pair[0], right: pair[1] };
+
+        levelPill.textContent = `Level ${state.levelIndex + 1}`;
+        instruction.textContent = 'Giữ cá sấu ở giữa và kéo sang trái hoặc phải để xoay miệng về phía có nhiều đồ vật hơn.';
+        resultMain.textContent = 'Bên nào nhiều hơn?';
+        resultSub.textContent = 'Kéo nhẹ sang bên có số lượng lớn hơn.';
+
+        createObjectGroup(leftGroup, state.round.left, -4.05, 0xF25F5C);
+        createObjectGroup(rightGroup, state.round.right, 4.05, 0xFFB000);
+        createNumberLabels();
+      }
+
+      function createObjectGroup(group, count, centerX, color) {
+        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.08 });
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.5 });
+        const cols = Math.min(5, count);
+        const spacingX = 0.45;
+        const spacingZ = 0.42;
+        const rows = Math.ceil(count / cols);
+        let index = 0;
+
+        for (let row = 0; row < rows; row++) {
+          const rowCount = Math.min(cols, count - index);
+          for (let col = 0; col < rowCount; col++) {
+            const item = new THREE.Group();
+            const x = (col - (rowCount - 1) / 2) * spacingX;
+            const z = (row - (rows - 1) / 2) * spacingZ;
+            item.position.set(centerX + x, 0.62, z);
+
+            const apple = new THREE.Mesh(new THREE.SphereGeometry(0.17, 32, 20), mat);
+            apple.scale.set(1, 0.96, 1);
+            apple.castShadow = true;
+            apple.receiveShadow = true;
+            item.add(apple);
+
+            const shine = new THREE.Mesh(
+              new THREE.SphereGeometry(0.045, 12, 8),
+              new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, transparent: true, opacity: 0.72 })
+            );
+            shine.position.set(-0.05, 0.07, 0.11);
+            item.add(shine);
+
+            const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.14, 10), leafMat);
+            leaf.position.set(0.04, 0.18, 0);
+            leaf.rotation.z = -0.7;
+            item.add(leaf);
+
+            item.userData.home = item.position.clone();
+            group.add(item);
+            index++;
+          }
+        }
+      }
+
+      function createNumberLabels() {
+        const leftNumber = makeTextSprite(String(state.round.left), {
+          fontSize: 116,
+          fontWeight: 1000,
+          color: '#155070',
+          bg: 'rgba(255,255,255,0.92)',
+          padding: 24,
+          radius: 42,
+          shadow: true
+        });
+        leftNumber.position.set(-4.05, 1.72, -0.05);
+        leftNumber.scale.set(1.08, 0.82, 1);
+        labelGroup.add(leftNumber);
+
+        const rightNumber = makeTextSprite(String(state.round.right), {
+          fontSize: 116,
+          fontWeight: 1000,
+          color: '#8b4208',
+          bg: 'rgba(255,255,255,0.92)',
+          padding: 24,
+          radius: 42,
+          shadow: true
+        });
+        rightNumber.position.set(4.05, 1.72, -0.05);
+        rightNumber.scale.set(1.08, 0.82, 1);
+        labelGroup.add(rightNumber);
+      }
+
+      function clearRoundObjects() {
+        clearGroup(leftGroup);
+        clearGroup(rightGroup);
+        clearGroup(labelGroup);
+        clearGroup(confettiGroup);
+        state.confetti = [];
+        state.pairLines = [];
+      }
+
+      function clearGroup(group) {
+        while (group.children.length) {
+          const child = group.children.pop();
+          child.traverse?.(obj => {
+            if (obj.geometry) obj.geometry.dispose?.();
+            if (obj.material) {
+              if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose?.());
+              else obj.material.dispose?.();
+            }
+          });
+        }
+      }
+
+      function resetRound() {
+        if (state.animation) state.animation = null;
+        startRound();
+      }
+
+      function nextRound() {
+        if (!state.completed) return;
+        state.levelIndex = (state.levelIndex + 1) % levels.length;
+        startRound();
+      }
+
+      function onPointerDown(event) {
+        event.preventDefault();
+        if (state.completed || state.animation) return;
+        state.dragging = true;
+        state.dragStartClientX = event.clientX;
+        state.dragCurrentClientX = event.clientX;
+        renderer.domElement.setPointerCapture?.(event.pointerId);
+        renderer.domElement.style.cursor = 'grabbing';
+        state.rotationChoice = null;
+        crocodile.scale.set(1.08, 1.08, 1.08);
+        instruction.textContent = 'Kéo sang trái hoặc phải. Chỉ cần rê nhẹ là cá sấu sẽ xoay theo.';
+      }
+
+      function onPointerMove(event) {
+        if (!state.dragging) return;
+        event.preventDefault();
+        state.dragCurrentClientX = event.clientX;
+
+        // Cá sấu không rời khỏi vị trí giữa. Bé chỉ kéo ngang để xoay miệng cá sấu.
+        crocodile.position.copy(state.crocodileStart);
+        crocodile.position.y = 0.35;
+
+        const deltaX = state.dragCurrentClientX - state.dragStartClientX;
+        const pull = clamp(deltaX / 90, -1, 1);
+        state.rotationChoice = getChoiceFromDrag(deltaX, 10);
+
+        crocodile.rotation.y = lerpAngle(
+          crocodile.rotation.y,
+          state.crocodileNeutralRotation + pull * (Math.PI / 2),
+          0.38
+        );
+        crocodile.rotation.z = pull * 0.12;
+
+        if (state.rotationChoice === 'left') {
+          resultMain.textContent = 'Miệng cá sấu quay sang trái';
+          resultSub.textContent = 'Cá sấu nên quay về phía có nhiều đồ vật hơn.';
+        } else if (state.rotationChoice === 'right') {
+          resultMain.textContent = 'Miệng cá sấu quay sang phải';
+          resultSub.textContent = 'Cá sấu nên quay về phía có nhiều đồ vật hơn.';
+        } else {
+          resultMain.textContent = 'Kéo thêm một chút nhé';
+          resultSub.textContent = 'Rê nhẹ sang trái hoặc phải để chọn hướng.';
+        }
+      }
+
+      function onPointerUp(event) {
+        if (!state.dragging) return;
+        event.preventDefault();
+        state.dragging = false;
+        renderer.domElement.releasePointerCapture?.(event.pointerId);
+        renderer.domElement.style.cursor = 'grab';
+
+        const deltaX = state.dragCurrentClientX - state.dragStartClientX;
+        const finalChoice = state.rotationChoice || getChoiceFromDrag(deltaX, 4);
+        if (!finalChoice) {
+          instruction.textContent = 'Kéo cá sấu rõ hơn sang trái hoặc phải nhé.';
+          resultMain.textContent = 'Chưa chọn hướng';
+          resultSub.textContent = 'Chỉ cần rê ngón tay hoặc chuột nhẹ sang một bên.';
+          animateBackToCenter();
+          return;
+        }
+
+        evaluateChoice(finalChoice);
+      }
+
+      function evaluateChoice(choice) {
+        if (state.completed) return;
+        const { left, right } = state.round;
+        const correct = left > right ? 'left' : 'right';
+        state.choice = choice;
+
+        if (choice === correct) {
+          state.completed = true;
+          nextBtn.disabled = false;
+          const symbol = left > right ? '>' : '<';
+          const text = `${left} ${symbol} ${right}`;
+
+          if (correct === 'left') {
+            instruction.textContent = `Bên trái còn nhiều hơn, nên cá sấu ăn bên trái.`;
+            resultMain.textContent = text;
+            resultSub.textContent = `${left} lớn hơn ${right}: nhóm bên trái có nhiều đồ vật hơn.`;
+          } else {
+            instruction.textContent = `Bên phải còn nhiều hơn, nên cá sấu ăn bên phải.`;
+            resultMain.textContent = text;
+            resultSub.textContent = `${right} lớn hơn ${left}: nhóm bên phải có nhiều đồ vật hơn.`;
+          }
+
+          showComparisonSymbol(symbol);
+          animateCorrect(choice);
+        } else {
+          const hint = correct === 'left'
+            ? 'Nhìn lại bên trái nhé. Bên nào có nhiều đồ vật hơn?'
+            : 'Nhìn lại bên phải nhé. Bên nào có nhiều đồ vật hơn?';
+          instruction.textContent = hint;
+          resultMain.textContent = 'Thử nhẹ nhàng lại nhé';
+          resultSub.textContent = 'Không sao cả. Hãy so sánh số lượng đồ vật ở hai bên.';
+          animateBackToCenter(true);
+        }
+      }
+
+      function showComparisonSymbol(symbol) {
+        const comparison = makeTextSprite(`${state.round.left} ${symbol} ${state.round.right}`, {
+          fontSize: 94,
+          fontWeight: 1000,
+          color: '#ffffff',
+          bg: symbol === '>' ? 'rgba(45, 180, 255, 0.95)' : 'rgba(255, 128, 67, 0.95)',
+          padding: 28,
+          radius: 44,
+          shadow: true
+        });
+        comparison.position.set(0, 2.2, 0.25);
+        comparison.scale.set(2.1, 0.8, 1);
+        labelGroup.add(comparison);
+      }
+
+      function animateCorrect(choice) {
+        const targetRot = rotationForChoice(choice);
+        const startPos = crocodile.position.clone();
+        const startRot = crocodile.rotation.y;
+        const duration = 0.8;
+        state.animation = {
+          t: 0,
+          duration,
+          update(dt) {
+            this.t += dt;
+            const p = easeOutBack(Math.min(this.t / duration, 1));
+            // Cá sấu vẫn ở giữa, chỉ xoay miệng về phía câu trả lời.
+            crocodile.position.lerpVectors(startPos, new THREE.Vector3(0, 0.34, 0), p);
+            crocodile.rotation.y = lerpAngle(startRot, targetRot, p);
+            crocodile.rotation.z = Math.sin(p * Math.PI * 2) * 0.06;
+            crocodile.scale.setScalar(1 + Math.sin(p * Math.PI) * 0.1);
+            if (this.t >= duration) {
+              state.animation = null;
+              crocodile.position.copy(state.crocodileStart);
+              crocodile.rotation.set(0, targetRot, 0);
+              crocodile.scale.setScalar(1);
+              pairObjectsThenCelebrate(choice);
+            }
+          }
+        };
+      }
+
+      function animateBackToCenter(wiggle = false) {
+        const startPos = crocodile.position.clone();
+        const startRot = crocodile.rotation.y;
+        const duration = 0.55;
+        state.animation = {
+          t: 0,
+          duration,
+          update(dt) {
+            this.t += dt;
+            const p = easeOutCubic(Math.min(this.t / duration, 1));
+            crocodile.position.lerpVectors(startPos, state.crocodileStart, p);
+            crocodile.rotation.y = lerpAngle(startRot, state.crocodileNeutralRotation, p);
+            const shake = wiggle ? Math.sin(p * Math.PI * 6) * 0.05 * (1 - p) : 0;
+            crocodile.position.x += shake;
+            crocodile.scale.setScalar(1 + Math.sin(p * Math.PI) * 0.06);
+            if (this.t >= duration) {
+              state.animation = null;
+              crocodile.position.copy(state.crocodileStart);
+              crocodile.rotation.set(0, state.crocodileNeutralRotation, 0);
+              crocodile.scale.set(1, 1, 1);
+            }
+          }
+        };
+      }
+
+      function pairObjectsThenCelebrate(choice) {
+        const { left, right } = state.round;
+        const pairs = Math.min(left, right);
+        const longer = left > right ? leftGroup : rightGroup;
+        const leftovers = Math.abs(left - right);
+
+        for (let i = 0; i < pairs; i++) {
+          const a = leftGroup.children[i];
+          const b = rightGroup.children[i];
+          if (!a || !b) continue;
+          createPairLine(a.position, b.position, i);
+        }
+
+        if (leftovers > 0) {
+          const start = pairs;
+          for (let i = start; i < longer.children.length; i++) {
+            const obj = longer.children[i];
+            obj.userData.bounce = true;
+            obj.userData.bounceSeed = i * 0.5;
+          }
+          const largerNumber = left > right ? left : right;
+          const smallerNumber = left > right ? right : left;
+          resultSub.textContent = `${pairs} đồ vật đã ghép thành cặp. Còn dư ${leftovers}, nên ${largerNumber} lớn hơn ${smallerNumber}.`;
+        } else {
+          resultSub.textContent = 'Hai nhóm đồ vật đã được ghép thành từng cặp.';
+        }
+
+        spawnConfetti();
+      }
+
+      function createPairLine(start, end, index) {
+        const points = [
+          new THREE.Vector3(start.x, 0.42, start.z),
+          new THREE.Vector3(end.x, 0.42, end.z)
+        ];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+        const line = new THREE.Line(geometry, material);
+        line.userData.pulseSeed = index * 0.4;
+        labelGroup.add(line);
+        state.pairLines.push(line);
+      }
+
+      function spawnConfetti() {
+        const colors = [0xff5d6c, 0xffc93c, 0x6be585, 0x53a7ff, 0xb589ff, 0xffffff];
+        for (let i = 0; i < 90; i++) {
+          const mat = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.45, metalness: 0.05 });
+          const piece = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.025, 0.12), mat);
+          piece.position.set((Math.random() - 0.5) * 1.5, 2.65 + Math.random() * 0.6, -0.5 + (Math.random() - 0.5) * 0.7);
+          piece.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+          piece.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 2.8, Math.random() * 2.3 + 1.3, (Math.random() - 0.5) * 1.4);
+          piece.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+          piece.castShadow = true;
+          confettiGroup.add(piece);
+          state.confetti.push(piece);
+        }
+      }
+
+
+      function rotationForChoice(choice) {
+        if (choice === 'left') return Math.PI;
+        if (choice === 'right') return 0;
+        return state.crocodileNeutralRotation;
+      }
+
+      function getChoiceFromDrag(deltaX, threshold) {
+        if (deltaX <= -threshold) return 'left';
+        if (deltaX >= threshold) return 'right';
+        return null;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(state.clock.getDelta(), 0.033);
+        const elapsed = state.clock.elapsedTime;
+
+        if (state.animation) state.animation.update(dt);
+
+        // Gentle idle motion for crocodile when not dragging.
+        if (!state.dragging && !state.animation && !state.completed) {
+          crocodile.position.y = state.crocodileStart.y + Math.sin(elapsed * 2.2) * 0.035;
+          crocodile.rotation.z = Math.sin(elapsed * 1.6) * 0.025;
+        }
+
+        for (const group of [leftGroup, rightGroup]) {
+          group.children.forEach((item, index) => {
+            item.rotation.y += dt * 0.35;
+            if (item.userData.bounce) {
+              item.position.y = 0.62 + Math.abs(Math.sin(elapsed * 5 + item.userData.bounceSeed)) * 0.23;
+            } else {
+              item.position.y = 0.62 + Math.sin(elapsed * 2.1 + index) * 0.025;
+            }
+          });
+        }
+
+        state.pairLines.forEach(line => {
+          line.material.opacity = 0.55 + Math.sin(elapsed * 4 + line.userData.pulseSeed) * 0.25;
+        });
+
+        state.confetti.forEach(piece => {
+          piece.userData.velocity.y -= 4.2 * dt;
+          piece.position.addScaledVector(piece.userData.velocity, dt);
+          piece.rotation.x += piece.userData.spin.x * dt;
+          piece.rotation.y += piece.userData.spin.y * dt;
+          piece.rotation.z += piece.userData.spin.z * dt;
+          if (piece.position.y < -0.1) {
+            piece.position.y = 2.8;
+            piece.userData.velocity.y = Math.random() * 1.6 + 1.1;
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      }
+
+      function makeTextSprite(text, options = {}) {
+        const {
+          fontSize = 70,
+          fontWeight = 900,
+          color = '#123',
+          bg = 'rgba(255,255,255,0.9)',
+          padding = 20,
+          radius = 28,
+          shadow = false
+        } = options;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const font = `${fontWeight} ${fontSize}px ui-rounded, "SF Pro Rounded", system-ui, sans-serif`;
+        ctx.font = font;
+        const metrics = ctx.measureText(text);
+        const width = Math.ceil(metrics.width + padding * 2);
+        const height = Math.ceil(fontSize + padding * 2);
+        const scale = 2;
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        ctx.scale(scale, scale);
+        ctx.font = font;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        roundedRect(ctx, 0, 0, width, height, radius, bg);
+        if (shadow) {
+          ctx.shadowColor = 'rgba(0,0,0,0.16)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 4;
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(text, width / 2, height / 2 + 2);
+        ctx.shadowColor = 'transparent';
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy?.() || 1;
+        const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+        const sprite = new THREE.Sprite(material);
+        sprite.userData.texture = texture;
+        sprite.userData.canvas = canvas;
+        return sprite;
+      }
+
+      function roundedRect(ctx, x, y, w, h, r, fill) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function easeOutBack(t) {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      }
+
+      function lerpAngle(a, b, t) {
+        const delta = Math.atan2(Math.sin(b - a), Math.cos(b - a));
+        return a + delta * t;
+      }
+    }
+  </script>
+</body>
+</html>
