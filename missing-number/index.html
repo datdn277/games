@@ -3,26 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trái cây và ô số</title>
+    <title>Điền số còn thiếu</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <div id="app">
       <canvas id="game-canvas"></canvas>
-      <section class="hud top-left">
-        <h1>Điền số cho ô trái cây</h1>
-        <p id="instruction">Kéo số đúng vào ô trống cùng vị trí với quả.</p>
-      </section>
+
+      <div class="sr-only" aria-live="polite" aria-atomic="true">
+        <p id="instruction">Mỗi nhóm cần đủ các số từ 1 đến 6. Tìm số còn thiếu rồi kéo vào ô trống.</p>
+      </div>
+
       <section class="hud top-right">
-        <div class="score-line"><span>Đúng</span><strong id="score">0/9</strong></div>
+        <div class="score-line"><span>Số câu đúng</span><strong id="score">0</strong></div>
         <div class="score-line"><span>Lượt sai</span><strong id="mistake">0</strong></div>
       </section>
+
       <section class="hud bottom-center">
-        <label class="toggle-pill" for="guide-mode-toggle">
-          <input id="guide-mode-toggle" type="checkbox" />
+        <label class="toggle-pill" for="teach-toggle">
+          <input id="teach-toggle" type="checkbox" />
           <span>Hướng dẫn chi tiết</span>
         </label>
-        <button id="hint-btn">Gợi ý vị trí tiếp theo</button>
+        <button id="hint-btn">Gợi ý</button>
         <button id="reset-btn" class="ghost">Chơi lại</button>
       </section>
     </div>
