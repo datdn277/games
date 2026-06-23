@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trái cây và ô số</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+      <section class="hud top-left">
+        <div class="badge">MVP Three.js</div>
+        <h1>Điền số cho ô trái cây</h1>
+        <p id="instruction">Kéo số đúng vào ô trống cùng vị trí với quả.</p>
+      </section>
+      <section class="hud top-right">
+        <div class="score-line"><span>Đúng</span><strong id="score">0/9</strong></div>
+        <div class="score-line"><span>Lượt sai</span><strong id="mistake">0</strong></div>
+      </section>
+      <section class="hud bottom-center">
+        <label class="toggle-pill" for="guide-mode-toggle">
+          <input id="guide-mode-toggle" type="checkbox" />
+          <span>Hướng dẫn chi tiết</span>
+        </label>
+        <button id="hint-btn">Gợi ý vị trí tiếp theo</button>
+        <button id="reset-btn" class="ghost">Chơi lại</button>
+      </section>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
