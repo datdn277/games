@@ -23,6 +23,8 @@
       --fruit-2: #ff667d;
       --missing-1: #7fd6ff;
       --missing-2: #4d8dff;
+      --pair-1: #ffb454;
+      --pair-2: #4fc4ff;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -193,6 +195,10 @@
       background: radial-gradient(circle, rgba(77, 141, 255, 0.5), rgba(77, 141, 255, 0));
     }
 
+    .game-card.fruit-pair::before {
+      background: radial-gradient(circle, rgba(79, 196, 255, 0.48), rgba(79, 196, 255, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -228,6 +234,10 @@
       background: linear-gradient(180deg, rgba(127, 214, 255, 0.28), rgba(77, 141, 255, 0.22));
     }
 
+    .fruit-pair .icon-wrap {
+      background: linear-gradient(180deg, rgba(255, 180, 84, 0.28), rgba(79, 196, 255, 0.24));
+    }
+
     .badge {
       display: inline-flex;
       width: fit-content;
@@ -261,6 +271,11 @@
     .missing-number .badge {
       background: rgba(127, 214, 255, 0.34);
       color: #15519b;
+    }
+
+    .fruit-pair .badge {
+      background: rgba(255, 180, 84, 0.28);
+      color: #8a4d08;
     }
 
     .game-card h2 {
@@ -331,6 +346,10 @@
 
     .missing-number .cta {
       background: linear-gradient(180deg, var(--missing-1), var(--missing-2));
+    }
+
+    .fruit-pair .cta {
+      background: linear-gradient(180deg, var(--pair-1), var(--pair-2));
     }
 
     @media (max-width: 1080px) {
@@ -477,6 +496,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Thiếu số</span>
               <span class="mini-pill">Quan sát nhanh</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card fruit-pair" href="./fruit-pair/index.html" aria-label="Mở game Ghép cặp để tìm bên nhiều hơn">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🍎🍌</div>
+            <div class="badge">Ghép cặp 1-1</div>
+            <h2>Ghép cặp tìm bên nhiều hơn</h2>
+            <p>Ghép từng quả Táo với từng quả Chuối, rồi nhìn phần còn dư để hiểu bên nào nhiều hơn, ít hơn hay bằng nhau.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">So sánh lượng</span>
+              <span class="mini-pill">Kéo thả 3D</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
