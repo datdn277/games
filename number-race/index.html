@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Race - Đường đua số</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #17324d;
+        background: #eaf8ff;
+      }
+
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #app {
+        position: relative;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255,255,255,0.95), rgba(255,255,255,0) 28%),
+          radial-gradient(circle at 84% 18%, rgba(255,245,198,0.95), rgba(255,245,198,0) 28%),
+          linear-gradient(135deg, #effcff 0%, #d8f1ff 50%, #fff2d8 100%);
+      }
+
+      #game-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        cursor: pointer;
+      }
+
+      .hud {
+        position: absolute;
+        padding: 12px 16px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow: 0 14px 36px rgba(45, 116, 160, 0.16);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        user-select: none;
+      }
+
+      .top-right {
+        top: 14px;
+        right: 14px;
+        min-width: 170px;
+      }
+
+      .bottom-center {
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        max-width: calc(100% - 28px);
+      }
+
+      .score-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+        font-weight: 750;
+        margin: 4px 0;
+      }
+
+      .score-line strong {
+        font-size: 22px;
+        color: #135ad9;
+      }
+
+      button,
+      .toggle-pill {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 16px;
+        font-weight: 850;
+        font-size: 15px;
+        box-shadow: 0 10px 24px rgba(45, 116, 160, 0.12);
+        cursor: pointer;
+      }
+
+      button {
+        background: linear-gradient(135deg, #ffb932, #ff7a45);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(255, 122, 69, 0.28);
+      }
+
+      button.secondary {
+        background: linear-gradient(135deg, #2e8cff, #6457ff);
+      }
+
+      button.ghost {
+        color: #185289;
+        background: rgba(255,255,255,0.9);
+      }
+
+      button.choice-active {
+        outline: 4px solid rgba(255, 179, 38, 0.55);
+      }
+
+      button:disabled {
+        cursor: default;
+        opacity: 0.98;
+      }
+
+      button:active {
+        transform: translateY(1px) scale(0.99);
+      }
+
+      .toggle-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,255,255,0.92);
+        color: #185289;
+      }
+
+      .toggle-pill input {
+        width: 18px;
+        height: 18px;
+        accent-color: #2e8cff;
+        cursor: pointer;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 900px) {
+        .top-right {
+          top: auto;
+          right: 12px;
+          bottom: 144px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+      <p id="instruction" class="sr-only" aria-live="polite">Bấm “Chạy thử” để các con vật cùng xuất phát và chạy đến vị trí số của mình.</p>
+
+      <section class="hud top-right">
+        <div class="score-line"><span>Đúng</span><strong id="score">0</strong></div>
+        <div class="score-line"><span>Lượt sai</span><strong id="mistake">0</strong></div>
+      </section>
+
+      <section class="hud bottom-center">
+        <label class="toggle-pill" for="teach-toggle">
+          <input id="teach-toggle" type="checkbox" />
+          <span>Hướng dẫn chi tiết</span>
+        </label>
+        <button id="race-btn" class="secondary">Chạy thử</button>
+        <button id="hint-btn">Gợi ý</button>
+        <button id="reset-btn" class="ghost">Câu mới</button>
+      </section>
+    </div>
+
+    <script type="module">
+      import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+      const canvas = document.querySelector('#game-canvas');
+      const instructionEl = document.querySelector('#instruction');
+      const scoreEl = document.querySelector('#score');
+      const mistakeEl = document.querySelector('#mistake');
+      const raceBtn = document.querySelector('#race-btn');
+      const hintBtn = document.querySelector('#hint-btn');
+      const resetBtn = document.querySelector('#reset-btn');
+      const teachToggle = document.querySelector('#teach-toggle');
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-8, 8, 5, -5, 0.1, 100);
+      camera.position.set(0, 0, 10);
+      camera.lookAt(0, 0, 0);
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambient);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+      dirLight.position.set(1.8, 4.5, 7);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.set(1024, 1024);
+      scene.add(dirLight);
+
+      const TRACK_START = -5.1;
+      const TRACK_END = 5.1;
+      const TRACK_LENGTH = TRACK_END - TRACK_START;
+      const TRACK_Y = 0.4;
+      const LANE_Y = [-0.55, -1.6, -2.65];
+      const CARD_Y = 2.9;
+      const CARD_X = [-3.2, 0, 3.2];
+
+      const racerConfigs = [
+        { name: 'Rùa', emoji: '🐢', color: 0x61c47a, accent: 0x1d8f48 },
+        { name: 'Thỏ', emoji: '🐰', color: 0xf7c7d9, accent: 0xc74f7c },
+        { name: 'Gấu', emoji: '🐻', color: 0xd39a58, accent: 0x8a4f1d },
+      ];
+
+      let racers = [];
+      let interactives = [];
+      let tweens = [];
+      let particles = [];
+      let score = 0;
+      let mistakes = 0;
+      let roundNo = 1;
+      let question = 'max';
+      let answerStep = 'max';
+      let selectedMaxId = null;
+      let selectedMinId = null;
+      let teachingMode = false;
+      let hasRun = false;
+      let guideObjects = [];
+      let lastSignature = '';
+
+      function resize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height, false);
+        const aspect = width / height;
+        const minWorldWidth = 11.8;
+        const minWorldHeight = 8.2;
+        let viewHeight = minWorldHeight;
+        let viewWidth = viewHeight * aspect;
+        if (viewWidth < minWorldWidth) {
+          viewWidth = minWorldWidth;
+          viewHeight = viewWidth / aspect;
+        }
+        camera.left = -viewWidth / 2;
+        camera.right = viewWidth / 2;
+        camera.top = viewHeight / 2;
+        camera.bottom = -viewHeight / 2;
+        camera.updateProjectionMatrix();
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+
+      function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function askCurrentQuestion() {
+        if (answerStep === 'max') {
+          setQuestion('max');
+          const message = 'Ai ở vị trí số lớn nhất? Hãy chạm vào con vật đi xa nhất bên phải.';
+          setInstruction(message);
+          speak(message);
+        } else if (answerStep === 'min') {
+          setQuestion('min');
+          const message = 'Ai ở vị trí số nhỏ nhất? Hãy chạm vào con vật gần số 0 nhất.';
+          setInstruction(message);
+          speak(message);
+        }
+      }
+
+      function canvasTexture(width, height, drawer) {
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
+        drawer(ctx, width, height);
+        const texture = new THREE.CanvasTexture(c);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+      function roundRect(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function makeTextTexture(text, options = {}) {
+        const {
+          width = 512,
+          height = 256,
+          fontSize = 80,
+          fill = '#ffffff',
+          textColor = '#17324d',
+          stroke = 'rgba(255,255,255,0.95)',
+          radius = 48,
+          label = '',
+          labelColor = 'rgba(23, 50, 77, 0.65)',
+          border = true,
+          shadow = true,
+        } = options;
+
+        return canvasTexture(width, height, (ctx, w, h) => {
+          const grad = ctx.createLinearGradient(0, 0, w, h);
+          grad.addColorStop(0, fill);
+          grad.addColorStop(1, '#ffffff');
+          roundRect(ctx, 14, 14, w - 28, h - 28, radius);
+          if (shadow) {
+            ctx.shadowColor = 'rgba(38, 84, 130, 0.18)';
+            ctx.shadowBlur = 22;
+            ctx.shadowOffsetY = 9;
+          }
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          if (border) {
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = stroke;
+            ctx.stroke();
+          }
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = textColor;
+          ctx.font = `900 ${fontSize}px Inter, system-ui, sans-serif`;
+          ctx.fillText(text, w / 2, label ? h * 0.42 : h / 2 + 4);
+          if (label) {
+            ctx.font = `800 ${Math.floor(fontSize * 0.28)}px Inter, system-ui, sans-serif`;
+            ctx.fillStyle = labelColor;
+            ctx.fillText(label, w / 2, h * 0.74);
+          }
+        });
+      }
+
+      function makeNumberLineTexture() {
+        return canvasTexture(1400, 220, (ctx, w, h) => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#1e5ca8';
+          ctx.lineWidth = 12;
+          ctx.shadowColor = 'rgba(30,92,168,0.25)';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(60, 92);
+          ctx.lineTo(w - 60, 92);
+          ctx.stroke();
+          ctx.shadowColor = 'transparent';
+
+          for (let i = 0; i <= 10; i += 1) {
+            const x = 60 + ((w - 120) * i) / 10;
+            ctx.strokeStyle = i === 0 ? '#35a86b' : i === 10 ? '#ff7a45' : '#1e5ca8';
+            ctx.lineWidth = i === 0 || i === 10 ? 9 : 6;
+            ctx.beginPath();
+            ctx.moveTo(x, 56);
+            ctx.lineTo(x, 128);
+            ctx.stroke();
+            ctx.fillStyle = '#17324d';
+            ctx.font = '900 44px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(i), x, 168);
+          }
+        });
+      }
+
+      function addPlane(group, width, height, material, position = new THREE.Vector3()) {
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+        mesh.position.copy(position);
+        group.add(mesh);
+        return mesh;
+      }
+
+      function disposeMaterial(material) {
+        if (material.map) material.map.dispose();
+        material.dispose();
+      }
+
+      function disposeObject(object) {
+        object.traverse?.((node) => {
+          if (node.geometry) node.geometry.dispose();
+          if (node.material) {
+            if (Array.isArray(node.material)) node.material.forEach(disposeMaterial);
+            else disposeMaterial(node.material);
+          }
+        });
+      }
+
+      function clearRoot() {
+        while (root.children.length) {
+          const child = root.children.pop();
+          disposeObject(child);
+        }
+        interactives = [];
+        guideObjects = [];
+        particles = [];
+        tweens = [];
+      }
+
+      function markInteractive(object, data) {
+        object.userData.interactive = data;
+        interactives.push(object);
+        return object;
+      }
+
+      function getInteractive(object) {
+        let current = object;
+        while (current) {
+          if (current.userData?.interactive) return current.userData.interactive;
+          current = current.parent;
+        }
+        return null;
+      }
+
+      function uniqueRandomNumbers(count = 3, min = 1, max = 10) {
+        const values = [];
+        while (values.length < count) {
+          const v = min + Math.floor(Math.random() * (max - min + 1));
+          if (!values.includes(v)) values.push(v);
+        }
+        return values;
+      }
+
+      function trackX(value) {
+        return TRACK_START + (value / 10) * TRACK_LENGTH;
+      }
+
+      function createLabel(text, x, y, width = 1.7, height = 0.55, options = {}) {
+        return addPlane(root, width, height, new THREE.MeshBasicMaterial({
+          map: makeTextTexture(text, options),
+          transparent: true,
+        }), new THREE.Vector3(x, y, 0.35));
+      }
+
+      function createCardTexture(title, value, config) {
+        return canvasTexture(560, 430, (ctx, w, h) => {
+          ctx.save();
+          ctx.shadowColor = 'rgba(38,84,130,0.18)';
+          ctx.shadowBlur = 26;
+          ctx.shadowOffsetY = 12;
+          roundRect(ctx, 18, 18, w - 36, h - 36, 42);
+          const grad = ctx.createLinearGradient(0, 0, w, h);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(1, '#eaf6ff');
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          ctx.lineWidth = 8;
+          ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+          ctx.stroke();
+
+          ctx.font = '900 54px Inter, system-ui, sans-serif';
+          ctx.fillStyle = '#17324d';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(title, w / 2, 58);
+
+          ctx.font = '120px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+          ctx.fillText(config.emoji, w / 2 - 96, 182);
+
+          ctx.font = '900 160px Inter, system-ui, sans-serif';
+          ctx.fillStyle = '#135ad9';
+          ctx.fillText(String(value), w / 2 + 82, 198);
+
+          ctx.font = '800 31px Inter, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(23,50,77,0.65)';
+          ctx.fillText('Con vật xuất phát ở vạch 0', w / 2, 342);
+          ctx.restore();
+        });
+      }
+
+      function addAnimalDetails(group, id, config) {
+        const accentMat = new THREE.MeshStandardMaterial({ color: config.accent, roughness: 0.55, metalness: 0.04 });
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
+        if (id === 0) {
+          const shell = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 20), accentMat);
+          shell.position.set(0, -0.1, -0.12);
+          shell.scale.set(1.24, 0.92, 0.62);
+          shell.castShadow = true;
+          group.add(shell);
+          const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 16), new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.6 }));
+          head.position.set(0, 0.21, 0.28);
+          group.add(head);
+        } else if (id === 1) {
+          [-0.13, 0.13].forEach((x) => {
+            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.08, 18, 14), accentMat);
+            ear.position.set(x, 0.34, 0.18);
+            ear.scale.set(0.72, 2.05, 0.52);
+            ear.rotation.z = x < 0 ? 0.18 : -0.18;
+            group.add(ear);
+          });
+          const tail = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), whiteMat);
+          tail.position.set(0.28, -0.22, -0.08);
+          group.add(tail);
+        } else {
+          [-0.19, 0.19].forEach((x) => {
+            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 18, 14), accentMat);
+            ear.position.set(x, 0.25, 0.12);
+            ear.scale.set(1, 1.1, 0.65);
+            group.add(ear);
+          });
+          const snout = new THREE.Mesh(new THREE.SphereGeometry(0.12, 18, 14), whiteMat);
+          snout.position.set(0, -0.04, 0.46);
+          snout.scale.set(1.25, 0.78, 0.45);
+          group.add(snout);
+        }
+      }
+
+      function createRacer({ id, name, number, config, cardX }) {
+        const card = addPlane(root, 1.9, 1.46, new THREE.MeshBasicMaterial({
+          map: createCardTexture(name, number, config),
+          transparent: true,
+        }), new THREE.Vector3(cardX, CARD_Y, 0.18));
+
+        const group = new THREE.Group();
+        group.position.set(TRACK_START, LANE_Y[id], 0.9);
+        group.userData.id = id;
+
+        const body = new THREE.Mesh(
+          new THREE.SphereGeometry(0.36, 40, 32),
+          new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.55, metalness: 0.08 })
+        );
+        body.position.set(0, -0.05, 0.1);
+        body.scale.set(1.06, 1.0, 0.82);
+        body.castShadow = true;
+        group.add(body);
+        markInteractive(body, { kind: 'racer', id });
+
+        addAnimalDetails(group, id, config);
+
+        const belly = new THREE.Mesh(
+          new THREE.SphereGeometry(0.21, 28, 20),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 })
+        );
+        belly.position.set(0, -0.09, 0.39);
+        belly.scale.set(1.08, 0.86, 0.35);
+        group.add(belly);
+
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0x0f1a2a, roughness: 0.4 });
+        [-0.12, 0.12].forEach((x) => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.034, 16, 12), eyeMat);
+          eye.position.set(x, 0.07, 0.43);
+          group.add(eye);
+        });
+
+        const shadow = new THREE.Mesh(
+          new THREE.CircleGeometry(0.43, 40),
+          new THREE.MeshBasicMaterial({ color: 0x164d7a, transparent: true, opacity: 0.13, depthWrite: false })
+        );
+        shadow.position.set(0.04, -0.48, -0.08);
+        shadow.scale.set(1.3, 0.32, 1);
+        group.add(shadow);
+
+        root.add(group);
+        return {
+          id,
+          name,
+          number,
+          config,
+          group,
+          card,
+          cardX,
+          startPosition: group.position.clone(),
+          lanePosition: new THREE.Vector3(trackX(number), LANE_Y[id], 0.9),
+          hasRaced: false,
+        };
+      }
+
+
+      function makePlainTextTexture(text, color = '#17324d', fontSize = 48) {
+        return canvasTexture(180, 120, (ctx, w, h) => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = color;
+          ctx.font = `900 ${fontSize}px Inter, system-ui, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(text, w / 2, h / 2 + 4);
+        });
+      }
+
+      function addAxisLabel(text, x, y, color = '#17324d') {
+        return addPlane(root, 0.46, 0.30, new THREE.MeshBasicMaterial({
+          map: makePlainTextTexture(text, color, 58),
+          transparent: true,
+          depthWrite: false,
+        }), new THREE.Vector3(x, y, 0.64));
+      }
+
+      function buildTrack() {
+        // Vẽ trục số bằng mesh thật thay vì chỉ dựa vào background/platform,
+        // để sau khi bỏ nền xám thì trục số và lane vẫn hiện rõ trên mọi trình duyệt.
+        const axisY = TRACK_Y + 0.26;
+        const axisMat = new THREE.MeshBasicMaterial({ color: 0x1e5ca8, transparent: true, opacity: 0.95, depthWrite: false });
+        const axis = new THREE.Mesh(new THREE.BoxGeometry(TRACK_LENGTH + 0.34, 0.055, 0.035), axisMat);
+        axis.position.set(0, axisY, 0.58);
+        root.add(axis);
+
+        for (let i = 0; i <= 10; i += 1) {
+          const x = trackX(i);
+          const tickColor = i === 0 ? 0x35a86b : i === 10 ? 0xff7a45 : 0x1e5ca8;
+          const tick = new THREE.Mesh(
+            new THREE.BoxGeometry(i === 0 || i === 10 ? 0.07 : 0.045, 0.42, 0.035),
+            new THREE.MeshBasicMaterial({ color: tickColor, transparent: true, opacity: 0.98, depthWrite: false })
+          );
+          tick.position.set(x, axisY, 0.62);
+          root.add(tick);
+          addAxisLabel(String(i), x, axisY - 0.46, i === 0 ? '#218f59' : i === 10 ? '#df6530' : '#17324d');
+        }
+
+        // Ba đường đua mảnh, không dùng nền xám bên dưới.
+        LANE_Y.forEach((y, index) => {
+          const laneColor = [0x39b66a, 0xe981ae, 0xc8833c][index];
+          const lane = new THREE.Mesh(
+            new THREE.BoxGeometry(TRACK_LENGTH + 0.2, 0.06, 0.035),
+            new THREE.MeshBasicMaterial({ color: laneColor, transparent: true, opacity: 0.72, depthWrite: false })
+          );
+          lane.position.set(0, y - 0.42, 0.48);
+          root.add(lane);
+
+          const startDot = new THREE.Mesh(
+            new THREE.CircleGeometry(0.09, 32),
+            new THREE.MeshBasicMaterial({ color: 0x35a86b, transparent: true, opacity: 0.95, depthWrite: false })
+          );
+          startDot.position.set(TRACK_START, y - 0.42, 0.55);
+          root.add(startDot);
+        });
+      }
+
+      function buildScene() {
+        clearRoot();
+        buildTrack();
+        const values = uniqueRandomNumbers(3, 1, 10);
+        const signature = values.join('-');
+        if (signature === lastSignature) values.reverse();
+        lastSignature = values.join('-');
+        racers = values.map((number, index) => createRacer({
+          id: index,
+          name: racerConfigs[index].name,
+          number,
+          config: racerConfigs[index],
+          cardX: CARD_X[index],
+        }));
+        hasRun = false;
+        answerStep = 'max';
+        selectedMaxId = null;
+        selectedMinId = null;
+        setQuestion('max');
+      }
+
+      function setQuestion(next) {
+        question = next;
+      }
+
+      function runRace(onComplete) {
+        if (hasRun) {
+          onComplete?.();
+          return;
+        }
+        hasRun = true;
+        racers.forEach((racer, index) => {
+          const start = racer.group.position.clone();
+          const end = racer.lanePosition.clone();
+          tween(racer.group, 1050 + index * 170, (t) => {
+            racer.group.position.x = start.x + (end.x - start.x) * t;
+            racer.group.position.y = start.y + (end.y - start.y) * t + Math.sin(t * Math.PI * 8) * 0.045;
+            racer.group.position.z = start.z + Math.sin(t * Math.PI) * 0.12;
+            racer.group.rotation.z = Math.sin(t * Math.PI * 10) * 0.04;
+          }, () => {
+            racer.group.position.copy(end);
+            racer.group.rotation.z = 0;
+            racer.hasRaced = true;
+            if (index === racers.length - 1) onComplete?.();
+          }, easeInOutCubic);
+        });
+      }
+
+      function correctRacer(step = question) {
+        return racers.reduce((best, current) => {
+          if (!best) return current;
+          return step === 'max'
+            ? current.number > best.number ? current : best
+            : current.number < best.number ? current : best;
+        }, null);
+      }
+
+      function selectRacer(id) {
+        if (answerStep === 'done') return;
+
+        const racer = racers.find((r) => r.id === id);
+        if (!racer) return;
+
+        if (!hasRun) {
+          const message = 'Hãy bấm Chạy thử trước để xem các con vật chạy đến vị trí số của mình nhé.';
+          setInstruction(message);
+          speak(message);
+          return;
+        }
+
+        if (answerStep === 'max') {
+          selectedMaxId = id;
+          highlightRacer(racer, '#ff9b2f');
+          answerStep = 'min';
+          setQuestion('min');
+          setTimeout(() => {
+            const message = 'Ai ở vị trí số nhỏ nhất? Hãy chạm vào con vật gần số 0 nhất.';
+            setInstruction(message);
+            speak(message);
+          }, 360);
+          return;
+        }
+
+        if (answerStep === 'min') {
+          selectedMinId = id;
+          highlightRacer(racer, '#35c76f');
+          answerStep = 'done';
+          setTimeout(showRoundResult, 420);
+        }
+      }
+
+      function showRoundResult() {
+        const maxRacer = correctRacer('max');
+        const minRacer = correctRacer('min');
+        const maxPick = racers.find((r) => r.id === selectedMaxId);
+        const minPick = racers.find((r) => r.id === selectedMinId);
+        const maxOk = selectedMaxId === maxRacer.id;
+        const minOk = selectedMinId === minRacer.id;
+
+        if (maxOk) score += 1;
+        else mistakes += 1;
+        if (minOk) score += 1;
+        else mistakes += 1;
+        scoreEl.textContent = String(score);
+        mistakeEl.textContent = String(mistakes);
+
+        highlightRacer(maxRacer, '#ff9b2f');
+        highlightRacer(minRacer, '#35c76f');
+        if (maxOk && minOk) {
+          burst(maxRacer.group.position.clone());
+          burst(minRacer.group.position.clone());
+        }
+
+        const maxText = maxOk
+          ? `Lớn nhất: đúng, ${maxRacer.name} ở số ${maxRacer.number}.`
+          : `Lớn nhất: chưa đúng. Con chọn ${maxPick?.name ?? 'một bạn'}, nhưng ${maxRacer.name} ở số ${maxRacer.number} mới xa nhất bên phải.`;
+        const minText = minOk
+          ? `Nhỏ nhất: đúng, ${minRacer.name} ở số ${minRacer.number}.`
+          : `Nhỏ nhất: chưa đúng. Con chọn ${minPick?.name ?? 'một bạn'}, nhưng ${minRacer.name} ở số ${minRacer.number} mới gần số 0 nhất.`;
+        const finalText = `${maxText} ${minText}`;
+        setInstruction(finalText + ' Bấm “Câu mới” để chơi tiếp.');
+        speak(finalText);
+      }
+
+      function highlightRacer(racer, color = '#ffb326') {
+        const glow = addPlane(root, 1.18, 1.18, new THREE.MeshBasicMaterial({
+          map: makeGlowTexture(color),
+          transparent: true,
+          opacity: 0.95,
+          depthWrite: false,
+        }), racer.group.position.clone().add(new THREE.Vector3(0, -0.05, 0.55)));
+        tween(glow, 900, (t) => {
+          const s = 1 + t * 0.32;
+          glow.scale.set(s, s, 1);
+          glow.material.opacity = 0.95 * (1 - t);
+        }, () => {
+          root.remove(glow);
+          disposeObject(glow);
+        });
+        scalePulse(racer.group, 1.16, 620);
+      }
+
+      function makeGlowTexture(color = '#ffb326') {
+        return canvasTexture(320, 320, (ctx, w, h) => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.lineWidth = 18;
+          ctx.strokeStyle = color;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 24;
+          roundRect(ctx, 26, 26, w - 52, h - 52, 36);
+          ctx.stroke();
+        });
+      }
+
+      function runTeachingGuide() {
+        if (teachingMode) {
+          setInstruction('Cả ba con vật cùng xuất phát ở vạch 0. Ta cho các bạn chạy đến số của mình.');
+          speak('Cả ba con vật cùng xuất phát ở vạch 0. Hãy xem các bạn chạy đến số của mình.');
+          runRace(() => {
+            const maxRacer = correctRacer('max');
+            const minRacer = correctRacer('min');
+            setTimeout(() => {
+              highlightRacer(maxRacer, '#ff9b2f');
+              createReasonArrow(maxRacer, 'max');
+              setInstruction(`${maxRacer.name} đang ở vị trí số ${maxRacer.number}. Đây là bạn ở vị trí số lớn nhất.`);
+              speak(`Ai ở vị trí số lớn nhất? ${maxRacer.name} ở vị trí số ${maxRacer.number}.`);
+            }, 350);
+            setTimeout(() => {
+              highlightRacer(minRacer, '#35c76f');
+              createReasonArrow(minRacer, 'min');
+              setInstruction(`${minRacer.name} đang ở vị trí số ${minRacer.number}. Đây là bạn ở vị trí số nhỏ nhất.`);
+              speak(`Ai ở vị trí số nhỏ nhất? ${minRacer.name} ở vị trí số ${minRacer.number}.`);
+            }, 1950);
+          });
+        } else {
+          setInstruction('Gợi ý: hãy bấm Chạy thử để quan sát vị trí của từng con vật trên đường số.');
+          runRace(askCurrentQuestion);
+        }
+      }
+
+      function createReasonArrow(racer, mode = question) {
+        clearGuideObjects();
+        const fromX = mode === 'max' ? TRACK_START : racer.group.position.x;
+        const toX = mode === 'max' ? racer.group.position.x : TRACK_START;
+        const width = Math.max(0.55, Math.abs(toX - fromX));
+        const centerX = (fromX + toX) / 2;
+        const arrow = addPlane(root, width, 0.38, new THREE.MeshBasicMaterial({
+          map: makeArrowTexture(mode === 'max' ? '#ff9b2f' : '#35c76f'),
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        }), new THREE.Vector3(centerX, racer.group.position.y + 0.62, 0.7));
+        guideObjects.push(arrow);
+        tween(arrow, 360, (t) => { arrow.material.opacity = t; });
+      }
+
+      function clearGuideObjects() {
+        guideObjects.forEach((obj) => {
+          root.remove(obj);
+          disposeObject(obj);
+        });
+        guideObjects = [];
+      }
+
+      function makeArrowTexture(color = '#ff9b2f') {
+        return canvasTexture(900, 180, (ctx, w, h) => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 18;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 14;
+          const y = h / 2;
+          ctx.beginPath();
+          ctx.moveTo(38, y);
+          ctx.lineTo(w - 78, y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(w - 78, y - 32);
+          ctx.lineTo(w - 26, y);
+          ctx.lineTo(w - 78, y + 32);
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
+
+      function pointerDown(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(interactives, false);
+        if (!hits.length) return;
+        const picked = getInteractive(hits[0].object);
+        if (picked?.kind === 'racer') selectRacer(picked.id);
+      }
+
+      function scalePulse(object, scaleUp = 1.15, duration = 520) {
+        const base = object.scale.clone();
+        tween(object, duration, (t) => {
+          const s = 1 + Math.sin(t * Math.PI) * (scaleUp - 1);
+          object.scale.set(base.x * s, base.y * s, base.z);
+        }, () => object.scale.copy(base));
+      }
+
+      function animateTo(object, to, duration = 420, onComplete, easing = easeOutCubic) {
+        const from = object.position.clone();
+        const end = to.clone();
+        tween(object, duration, (t) => {
+          object.position.lerpVectors(from, end, t);
+        }, onComplete, easing);
+      }
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function tween(target, duration, update, onComplete, easing = easeOutCubic) {
+        tweens.push({ target, duration, elapsed: 0, update, onComplete, easing });
+      }
+
+      function shake(object) {
+        const base = object.position.clone();
+        tween(object, 420, (t) => {
+          const amp = (1 - t) * 0.16;
+          object.position.x = base.x + Math.sin(t * Math.PI * 10) * amp;
+          object.position.y = base.y + Math.sin(t * Math.PI * 7) * amp * 0.35;
+        }, () => object.position.copy(base), (t) => t);
+      }
+
+      function createSparkTexture() {
+        return canvasTexture(128, 128, (ctx, w, h) => {
+          ctx.translate(w / 2, h / 2);
+          ctx.fillStyle = '#ffd54d';
+          ctx.shadowColor = '#ff9e1a';
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i += 1) {
+            const radius = i % 2 === 0 ? 50 : 18;
+            const angle = (Math.PI * 2 * i) / 8 - Math.PI / 2;
+            ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+          }
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
+
+      function createSpark(x, y) {
+        return addPlane(root, 0.2, 0.2, new THREE.MeshBasicMaterial({
+          map: createSparkTexture(),
+          transparent: true,
+        }), new THREE.Vector3(x, y, 1.25));
+      }
+
+      function burst(center) {
+        for (let i = 0; i < 24; i += 1) {
+          const angle = (Math.PI * 2 * i) / 24;
+          const speed = 0.75 + Math.random() * 0.45;
+          const spark = createSpark(center.x, center.y);
+          particles.push({
+            mesh: spark,
+            velocity: new THREE.Vector3(Math.cos(angle) * speed, Math.sin(angle) * speed, 0),
+            life: 0,
+            maxLife: 0.75 + Math.random() * 0.25,
+            spin: (Math.random() - 0.5) * 5,
+          });
+        }
+      }
+
+      function setInstruction(message) {
+        instructionEl.textContent = message;
+      }
+
+      function resetRound() {
+        roundNo += 1;
+        buildScene();
+        const message = 'Câu mới: Cả ba con vật đang ở vạch xuất phát. Bấm Chạy thử để xem ai ở vị trí lớn nhất và nhỏ nhất.';
+        setInstruction(message);
+      }
+
+      function updateTweens(deltaMs) {
+        tweens = tweens.filter((tw) => {
+          tw.elapsed += deltaMs;
+          const raw = Math.min(tw.elapsed / tw.duration, 1);
+          const t = tw.easing ? tw.easing(raw) : raw;
+          tw.update(t, raw);
+          if (raw >= 1) {
+            tw.onComplete?.();
+            return false;
+          }
+          return true;
+        });
+      }
+
+      function updateParticles(delta) {
+        particles = particles.filter((p) => {
+          p.life += delta;
+          p.mesh.position.x += p.velocity.x * delta;
+          p.mesh.position.y += p.velocity.y * delta;
+          p.velocity.y -= 1.25 * delta;
+          p.mesh.rotation.z += p.spin * delta;
+          const t = p.life / p.maxLife;
+          p.mesh.scale.setScalar(Math.max(0.01, 1 - t * 0.5));
+          if (p.mesh.material?.opacity !== undefined) p.mesh.material.opacity = Math.max(0, 1 - t);
+          if (t >= 1) {
+            root.remove(p.mesh);
+            disposeObject(p.mesh);
+            return false;
+          }
+          return true;
+        });
+      }
+
+      let last = performance.now();
+      function animate(now = performance.now()) {
+        const deltaMs = now - last;
+        last = now;
+        updateTweens(deltaMs);
+        updateParticles(deltaMs / 1000);
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      canvas.addEventListener('pointerdown', pointerDown);
+      raceBtn.addEventListener('click', () => runRace(askCurrentQuestion));
+      hintBtn.addEventListener('click', runTeachingGuide);
+      resetBtn.addEventListener('click', resetRound);
+      teachToggle.addEventListener('change', (event) => {
+        teachingMode = Boolean(event.target.checked);
+        setInstruction(teachingMode
+          ? 'Đã bật Hướng dẫn chi tiết. Bấm Gợi ý để game giải thích bằng đường số.'
+          : 'Đã tắt Hướng dẫn chi tiết. Hãy bấm Chạy thử rồi tự chọn đáp án.');
+      });
+
+      buildScene();
+      animate();
+    </script>
+  </body>
+</html>

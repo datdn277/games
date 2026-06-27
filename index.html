@@ -25,6 +25,8 @@
       --missing-2: #4d8dff;
       --pair-1: #ffb454;
       --pair-2: #4fc4ff;
+      --race-1: #78d9ff;
+      --race-2: #3b82f6;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -199,6 +201,10 @@
       background: radial-gradient(circle, rgba(79, 196, 255, 0.48), rgba(79, 196, 255, 0));
     }
 
+    .game-card.number-race::before {
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -236,6 +242,10 @@
 
     .fruit-pair .icon-wrap {
       background: linear-gradient(180deg, rgba(255, 180, 84, 0.28), rgba(79, 196, 255, 0.24));
+    }
+
+    .number-race .icon-wrap {
+      background: linear-gradient(180deg, rgba(120, 217, 255, 0.3), rgba(59, 130, 246, 0.24));
     }
 
     .badge {
@@ -276,6 +286,11 @@
     .fruit-pair .badge {
       background: rgba(255, 180, 84, 0.28);
       color: #8a4d08;
+    }
+
+    .number-race .badge {
+      background: rgba(120, 217, 255, 0.32);
+      color: #15519b;
     }
 
     .game-card h2 {
@@ -350,6 +365,10 @@
 
     .fruit-pair .cta {
       background: linear-gradient(180deg, var(--pair-1), var(--pair-2));
+    }
+
+    .number-race .cta {
+      background: linear-gradient(180deg, var(--race-1), var(--race-2));
     }
 
     @media (max-width: 1080px) {
@@ -513,6 +532,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">So sánh lượng</span>
               <span class="mini-pill">Kéo thả 3D</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card number-race" href="./number-race/index.html" aria-label="Mở game Đường đua số">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🏁</div>
+            <div class="badge">Trục số trực quan</div>
+            <h2>Đường đua số</h2>
+            <p>Quan sát các con vật chạy từ vạch 0 đến vị trí của mình trên trục số để nhận biết số lớn nhất và số nhỏ nhất.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Trục số</span>
+              <span class="mini-pill">So sánh vị trí</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
