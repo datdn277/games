@@ -27,6 +27,8 @@
       --pair-2: #4fc4ff;
       --race-1: #78d9ff;
       --race-2: #3b82f6;
+      --letter-1: #9f87ff;
+      --letter-2: #ff7aa2;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -205,6 +207,10 @@
       background: radial-gradient(circle, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0));
     }
 
+    .game-card.letter-detective::before {
+      background: radial-gradient(circle, rgba(159, 135, 255, 0.5), rgba(159, 135, 255, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -246,6 +252,10 @@
 
     .number-race .icon-wrap {
       background: linear-gradient(180deg, rgba(120, 217, 255, 0.3), rgba(59, 130, 246, 0.24));
+    }
+
+    .letter-detective .icon-wrap {
+      background: linear-gradient(180deg, rgba(159, 135, 255, 0.28), rgba(255, 122, 162, 0.22));
     }
 
     .badge {
@@ -291,6 +301,11 @@
     .number-race .badge {
       background: rgba(120, 217, 255, 0.32);
       color: #15519b;
+    }
+
+    .letter-detective .badge {
+      background: rgba(159, 135, 255, 0.22);
+      color: #6748cf;
     }
 
     .game-card h2 {
@@ -369,6 +384,10 @@
 
     .number-race .cta {
       background: linear-gradient(180deg, var(--race-1), var(--race-2));
+    }
+
+    .letter-detective .cta {
+      background: linear-gradient(180deg, var(--letter-1), var(--letter-2));
     }
 
     @media (max-width: 1080px) {
@@ -549,6 +568,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Trục số</span>
               <span class="mini-pill">So sánh vị trí</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card letter-detective" href="./letter-detective/index.html" aria-label="Mở game Thám tử chữ cái">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🔎</div>
+            <div class="badge">Tìm chữ khác</div>
+            <h2>Thám tử chữ cái</h2>
+            <p>Quan sát lưới chữ 3x3 và tìm ra chữ cái khác biệt để luyện nhận diện chữ tiếng Việt theo cách trực quan, vui mắt.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Chữ cái Việt</span>
+              <span class="mini-pill">Quan sát nhanh</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
