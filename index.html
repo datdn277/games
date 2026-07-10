@@ -29,6 +29,8 @@
       --race-2: #3b82f6;
       --letter-1: #9f87ff;
       --letter-2: #ff7aa2;
+      --machine-1: #4c8de8;
+      --machine-2: #7a52b3;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -211,6 +213,10 @@
       background: radial-gradient(circle, rgba(159, 135, 255, 0.5), rgba(159, 135, 255, 0));
     }
 
+    .game-card.vietnamese-machine::before {
+      background: radial-gradient(circle, rgba(76, 141, 232, 0.5), rgba(122, 82, 179, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -256,6 +262,14 @@
 
     .letter-detective .icon-wrap {
       background: linear-gradient(180deg, rgba(159, 135, 255, 0.28), rgba(255, 122, 162, 0.22));
+    }
+
+    .vietnamese-machine .icon-wrap {
+      color: #ffffff;
+      background: linear-gradient(145deg, var(--machine-1), var(--machine-2));
+      font-size: 30px;
+      font-weight: 1000;
+      letter-spacing: -0.08em;
     }
 
     .badge {
@@ -306,6 +320,11 @@
     .letter-detective .badge {
       background: rgba(159, 135, 255, 0.22);
       color: #6748cf;
+    }
+
+    .vietnamese-machine .badge {
+      background: rgba(76, 141, 232, 0.2);
+      color: #315f9e;
     }
 
     .game-card h2 {
@@ -388,6 +407,10 @@
 
     .letter-detective .cta {
       background: linear-gradient(180deg, var(--letter-1), var(--letter-2));
+    }
+
+    .vietnamese-machine .cta {
+      background: linear-gradient(180deg, var(--machine-1), var(--machine-2));
     }
 
     @media (max-width: 1080px) {
@@ -585,6 +608,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Chữ cái Việt</span>
               <span class="mini-pill">Quan sát nhanh</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card vietnamese-machine" href="./vietnamese-machine/index.html" aria-label="Mở game Máy Lắp Tiếng Việt">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">Aă</div>
+            <div class="badge">Ghép cấu tạo tiếng</div>
+            <h2>Máy Lắp Tiếng Việt</h2>
+            <p>Chọn âm đầu, vần và thanh, rồi lắp ba mảnh thành một tiếng Việt có nghĩa.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Tiếng Việt</span>
+              <span class="mini-pill">Kéo thả 3D</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
