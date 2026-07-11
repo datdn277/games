@@ -1,5 +1,5 @@
 import { PALETTE } from "../data/colors.js";
-import { DIFFICULTY_CONFIGS } from "../data/levels.js";
+import { resolveLevelConfig } from "../data/levels.js";
 import { createEmptyGrid, gridSignature } from "./validation.js";
 
 function randomInt(random, min, max) {
@@ -23,6 +23,7 @@ function allCells(rows, columns) {
 }
 
 function isSpreadEnough(cells, config) {
+  if (cells.length <= 1) return true;
   const rowCount = new Set(cells.map((cell) => cell.row)).size;
   const columnCount = new Set(cells.map((cell) => cell.column)).size;
   if (rowCount < 2 || columnCount < 2) return false;
@@ -34,7 +35,7 @@ function isSpreadEnough(cells, config) {
 }
 
 export function validateGeneratedLevel(level, difficulty = level?.difficulty) {
-  const config = DIFFICULTY_CONFIGS[difficulty];
+  const config = resolveLevelConfig(difficulty, level?.sizeMode ?? "auto");
   if (!config || level.rows !== config.rows || level.columns !== config.columns) return false;
   if (!Array.isArray(level.templateGrid) || level.templateGrid.length !== config.rows) return false;
   if (level.templateGrid.some((row) => !Array.isArray(row) || row.length !== config.columns)) return false;
@@ -58,8 +59,8 @@ export class LevelGenerator {
     this.previousSignature = null;
   }
 
-  generate(difficulty = "easy", previousSignature = this.previousSignature) {
-    const config = DIFFICULTY_CONFIGS[difficulty] ?? DIFFICULTY_CONFIGS.easy;
+  generate(difficulty = "easy", previousSignature = this.previousSignature, sizeMode = "auto") {
+    const config = resolveLevelConfig(difficulty, sizeMode);
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const candidate = this.#createCandidate(difficulty, config);
       const signature = gridSignature(candidate);
@@ -86,6 +87,7 @@ export class LevelGenerator {
     positions.forEach((cell, index) => { templateGrid[cell.row][cell.column] = assignments[index]; });
     return {
       difficulty,
+      sizeMode: config.sizeMode,
       rows: config.rows,
       columns: config.columns,
       colors,
@@ -98,9 +100,18 @@ export class LevelGenerator {
   }
 
   #createFallback(difficulty, config, previousSignature) {
+    const cornersFirst = [
+      [0, 0],
+      [config.rows - 1, config.columns - 1],
+      [0, config.columns - 1],
+      [config.rows - 1, 0],
+      [Math.floor(config.rows / 2), Math.floor(config.columns / 2)]
+    ];
+    const everyCell = allCells(config.rows, config.columns).map((cell) => [cell.row, cell.column]);
+    const makeUnique = (cells) => [...new Map(cells.map((cell) => [`${cell[0]}:${cell[1]}`, cell])).values()];
     const variants = [
-      [[0, 0], [1, 1], [2, 2], [0, 2], [2, 0], [1, 2], [3, 3], [3, 0]],
-      [[0, 1], [1, 0], [2, 1], [1, 2], [0, 2], [2, 2], [3, 1], [3, 3]]
+      makeUnique([...cornersFirst, ...everyCell]),
+      makeUnique([...cornersFirst.slice().reverse(), ...everyCell.slice().reverse()])
     ];
     const paintedCount = config.minPaintedCells;
     const colorCount = config.minColorCount;
@@ -110,7 +121,7 @@ export class LevelGenerator {
       cells.slice(0, paintedCount).forEach(([row, column], index) => {
         if (row < config.rows && column < config.columns) templateGrid[row][column] = colors[index % colors.length];
       });
-      const candidate = { difficulty, rows: config.rows, columns: config.columns, colors, templateGrid, paintedCount, autoSelectColor: config.autoSelectColor, interactionMode: config.interactionMode, validationMode: config.validationMode };
+      const candidate = { difficulty, sizeMode: config.sizeMode, rows: config.rows, columns: config.columns, colors, templateGrid, paintedCount, autoSelectColor: config.autoSelectColor, interactionMode: config.interactionMode, validationMode: config.validationMode };
       if (gridSignature(candidate) !== previousSignature && validateGeneratedLevel(candidate, difficulty)) return candidate;
     }
     return this.#createCandidate(difficulty, config);

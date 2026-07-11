@@ -59,7 +59,7 @@ input:focus-visible + i {
 
 .topbar {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) auto minmax(220px, 1fr);
+  grid-template-columns: auto minmax(320px, 1fr) auto;
   align-items: center;
   gap: 18px;
   margin-bottom: 14px;
@@ -83,7 +83,7 @@ input:focus-visible + i {
 
 .home-link span { font-size: 27px; line-height: 0; }
 
-.title-group { text-align: center; }
+.title-group { min-width: 0; text-align: center; }
 
 .eyebrow {
   color: var(--violet-dark);
@@ -100,16 +100,27 @@ h1 {
   letter-spacing: -.045em;
 }
 
-.difficulty-picker {
+.mode-pickers {
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.difficulty-picker,
+.size-picker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: var(--muted);
   font-weight: 900;
 }
 
-.difficulty-picker select {
+.mode-label { white-space: nowrap; }
+
+.difficulty-picker select,
+.size-picker select {
   min-height: 46px;
   padding: 0 34px 0 14px;
   color: var(--ink);
@@ -118,6 +129,31 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 15px;
   cursor: pointer;
+}
+
+.difficulty-picker select { max-width: 230px; }
+.size-picker select { width: 120px; }
+
+.custom-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+.custom-size-control[hidden] { display: none !important; }
+
+.custom-size-control input {
+  width: 62px;
+  min-height: 46px;
+  padding: 0 6px 0 10px;
+  color: var(--ink);
+  font-weight: 1000;
+  text-align: center;
+  background: rgba(255,255,255,.9);
+  border: 1px solid var(--line);
+  border-radius: 15px;
 }
 
 .status-strip {
@@ -617,7 +653,7 @@ h1 {
   .game-shell { max-width: 900px; }
   .topbar { grid-template-columns: 1fr 1fr; }
   .title-group { grid-column: 1 / -1; grid-row: 1; }
-  .home-link, .difficulty-picker { grid-row: 2; }
+  .home-link, .mode-pickers { grid-row: 2; }
   .paint-dock {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -645,8 +681,23 @@ h1 {
   h1 { font-size: 30px; }
   .eyebrow { font-size: 9px; }
   .home-link { min-height: 43px; padding: 7px 10px; font-size: 12px; }
-  .difficulty-picker { font-size: 12px; }
-  .difficulty-picker select { max-width: 184px; min-height: 43px; padding-left: 10px; font-size: 11px; }
+  .mode-pickers { gap: 5px; }
+  .mode-label { display: none; }
+  .mode-pickers {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+  .difficulty-picker,
+  .size-picker { min-width: 0; }
+  .difficulty-picker select,
+  .size-picker select { min-height: 43px; padding-left: 9px; padding-right: 24px; font-size: 11px; }
+  .difficulty-picker select { width: 100%; max-width: none; }
+  .size-picker select { flex: 1 1 auto; width: auto; min-width: 0; }
+  .custom-size-control { flex: 0 0 auto; }
+  .custom-size-control input { width: 52px; min-height: 43px; font-size: 12px; }
   .status-strip { padding: 11px; border-radius: 18px; }
   #game-status { font-size: 14px; white-space: normal; }
   .round-stats > span { padding: 6px 3px; }

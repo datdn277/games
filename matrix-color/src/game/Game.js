@@ -1,5 +1,5 @@
 import { COLOR_BY_ID } from "../data/colors.js";
-import { DIFFICULTY_ORDER } from "../data/levels.js";
+import { DIFFICULTY_ORDER, normalizeGridSizeMode } from "../data/levels.js";
 import { TwinGridScene } from "../render/TwinGridScene.js";
 import { GameUI } from "../ui/GameUI.js";
 import { AudioController } from "./AudioController.js";
@@ -25,6 +25,7 @@ export class Game {
     this.ui = new GameUI(root);
     this.scene = new TwinGridScene({ templateHost: this.ui.elements.templateHost, playerHost: this.ui.elements.playerHost });
     this.currentLevel = null;
+    this.gridSizeMode = normalizeGridSizeMode(this.progress.gridSize);
     this.roundToken = 0;
   }
 
@@ -36,6 +37,7 @@ export class Game {
       onReset: () => this.startLevel(this.state?.difficulty ?? "easy", { reuse: true }),
       onNext: () => this.startLevel(this.state?.difficulty ?? "easy"),
       onDifficultyChange: (difficulty) => this.startLevel(difficulty),
+      onGridSizeChange: (sizeMode) => this.changeGridSize(sizeMode),
       onSoundChange: (enabled) => this.setSound(enabled)
     });
     this.input = new InputController({
@@ -48,25 +50,32 @@ export class Game {
       onEraseShortcut: (cell) => this.eraseCell(cell)
     });
     this.input.bind();
-    this.startLevel(this.progress.currentDifficulty || "easy");
+    this.startLevel(this.progress.currentDifficulty || "easy", { sizeMode: this.gridSizeMode });
   }
 
-  startLevel(difficulty = "easy", { reuse = false } = {}) {
+  startLevel(difficulty = "easy", { reuse = false, sizeMode = this.gridSizeMode } = {}) {
     this.roundToken += 1;
     const safeDifficulty = DIFFICULTY_ORDER.includes(difficulty) ? difficulty : "easy";
-    if (!reuse || !this.currentLevel || this.currentLevel.difficulty !== safeDifficulty) {
+    const safeSizeMode = normalizeGridSizeMode(sizeMode);
+    this.gridSizeMode = safeSizeMode;
+    if (!reuse || !this.currentLevel || this.currentLevel.difficulty !== safeDifficulty || this.currentLevel.sizeMode !== safeSizeMode) {
       const previousSignature = this.currentLevel ? gridSignature(this.currentLevel) : null;
-      this.currentLevel = this.generator.generate(safeDifficulty, previousSignature);
+      this.currentLevel = this.generator.generate(safeDifficulty, previousSignature, safeSizeMode);
     }
     this.state = new GameState(structuredClone(this.currentLevel));
     this.state.soundEnabled = this.soundEnabled;
     this.audio.setEnabled(this.soundEnabled);
-    this.progress = this.progressStore.save({ ...this.progress, currentDifficulty: safeDifficulty });
+    this.progress = this.progressStore.save({ ...this.progress, currentDifficulty: safeDifficulty, gridSize: safeSizeMode });
     this.scene.build(this.state);
     this.ui.renderRound(this.state, this.progress);
     this.input.configure(this.state.rows, this.state.columns);
     this.input.setEnabled(true);
     this.audio.speak("Hãy tô bảng bên phải giống bảng mẫu.");
+  }
+
+  changeGridSize(sizeMode) {
+    const safeSizeMode = normalizeGridSizeMode(sizeMode, this.gridSizeMode === "auto" ? "3" : this.gridSizeMode);
+    this.startLevel(this.state?.difficulty ?? "easy", { sizeMode: safeSizeMode });
   }
 
   selectColor(colorId) {

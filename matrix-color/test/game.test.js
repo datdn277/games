@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PALETTE } from "../src/data/colors.js";
-import { DIFFICULTY_CONFIGS } from "../src/data/levels.js";
+import { DIFFICULTY_CONFIGS, GRID_SIZE_MODES, normalizeGridSizeMode, resolveLevelConfig } from "../src/data/levels.js";
 import { AudioController } from "../src/game/AudioController.js";
 import { GameState } from "../src/game/GameState.js";
 import { keyToGridAction } from "../src/game/InputController.js";
@@ -67,6 +67,37 @@ test("mức Dễ là 3x3, đúng một màu, 2-4 ô và tự chọn màu", () =>
     const state = new GameState(level);
     assert.equal(state.selectedColor, level.colors[0]);
   }
+});
+
+test("mode nhập tay sinh đúng ma trận từ 2x2 đến 7x7 cho mọi độ khó", () => {
+  const generator = new LevelGenerator(seededRandom(2026));
+  for (const difficulty of ["easy", "medium", "hard"]) {
+    for (const sizeMode of GRID_SIZE_MODES.filter((value) => value !== "auto")) {
+      const config = resolveLevelConfig(difficulty, sizeMode);
+      for (let index = 0; index < 25; index += 1) {
+        const level = generator.generate(difficulty, null, sizeMode);
+        assert.equal(level.sizeMode, sizeMode);
+        assert.equal(level.rows, Number(sizeMode));
+        assert.equal(level.columns, Number(sizeMode));
+        assert.equal(validateGeneratedLevel(level, difficulty), true);
+        assert.ok(level.paintedCount >= config.minPaintedCells && level.paintedCount <= config.maxPaintedCells);
+      }
+    }
+  }
+});
+
+test("kích thước nhập tay được chuẩn hóa an toàn trong khoảng 2 đến 7", () => {
+  assert.equal(normalizeGridSizeMode("6"), "6");
+  assert.equal(normalizeGridSizeMode("1"), "2");
+  assert.equal(normalizeGridSizeMode("99"), "7");
+  assert.equal(normalizeGridSizeMode("không hợp lệ"), "auto");
+});
+
+test("mode Tự động giữ kích thước mặc định theo độ khó", () => {
+  const generator = new LevelGenerator(seededRandom(88));
+  assert.equal(generator.generate("easy", null, "auto").rows, 3);
+  assert.equal(generator.generate("medium", null, "auto").rows, 3);
+  assert.equal(generator.generate("hard", null, "auto").rows, 4);
 });
 
 test("mức Trung bình luôn dùng hai màu và mức Khó dùng ba hoặc bốn màu", () => {
@@ -185,6 +216,9 @@ test("lưu, đọc tiến trình và phục hồi an toàn khi dữ liệu hỏn
   assert.equal(updated.totalStars, 3);
   assert.equal(updated.unlockedDifficulty, "medium");
   assert.deepEqual(store.load(), updated);
+  const withSize = store.save({ ...updated, gridSize: "5" });
+  assert.equal(store.load().gridSize, "5");
+  assert.equal(withSize.gridSize, "5");
   values.set(STORAGE_KEY, "{broken");
   assert.equal(store.load().completedLevels, 0);
 });

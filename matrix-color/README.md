@@ -24,9 +24,13 @@ npm run preview
 
 ## Cách chơi
 
-- Mức **Dễ** dùng ma trận 3×3, một màu và 2–4 ô. Màu được chọn sẵn, trẻ chỉ cần tìm đúng vị trí.
-- Mức **Trung bình** dùng ma trận 3×3, hai màu và 3–5 ô.
-- Mức **Khó** dùng ma trận 4×4, ba hoặc bốn màu và 6–8 ô; hỗ trợ kéo màu vào ô.
+- Chọn **Kích thước → Nhập tay**, rồi nhập một số từ 2 đến 7 để tạo bảng vuông tương ứng, ví dụ `6` tạo bảng 6×6.
+- Giá trị nhỏ hơn 2 hoặc lớn hơn 7 được tự động đưa về giới hạn an toàn; dữ liệu không hợp lệ trở về mode Tự động.
+- Ở mode **Tự động**, mức Dễ và Trung bình dùng 3×3, mức Khó dùng 4×4.
+- Mức **Dễ** dùng một màu và tự chọn sẵn màu; trẻ chỉ cần tìm đúng vị trí.
+- Mức **Trung bình** dùng hai màu.
+- Mức **Khó** dùng ba hoặc bốn màu và hỗ trợ kéo màu vào ô.
+- Khi nhập bảng lớn hơn, số ô cần sao chép tăng theo nhưng số màu vẫn do mức độ quyết định.
 - Chọn màu rồi chạm ô trong Bảng của bé, hoặc kéo trực tiếp swatch màu vào ô.
 - Màu sai được hiển thị ngắn, rung và tự trở lại trạng thái trước đó.
 - Nút **Tẩy màu** xóa riêng một ô, không cần reset toàn màn.
@@ -42,7 +46,7 @@ src/
   styles.css
   data/
     colors.js                 Bảng màu có tên và symbol
-    levels.js                 Cấu hình độ khó tách khỏi logic
+    levels.js                 Cấu hình độ khó và kích thước tách khỏi logic
   game/
     Game.js                   Điều phối vòng chơi
     GameState.js              State và luật tô/validation thuần
@@ -81,13 +85,14 @@ test/
 
 ## Lưu tiến trình
 
-`localStorage` lưu phiên bản schema, mức hiện tại, mức đã mở, tổng số sao, số màn hoàn thành và sao tốt nhất theo độ khó. Dữ liệu thiếu, hỏng hoặc storage bị chặn đều trở về mặc định an toàn mà không chặn gameplay.
+`localStorage` lưu phiên bản schema, mức hiện tại, kích thước đã chọn, mức đã mở, tổng số sao, số màn hoàn thành và sao tốt nhất theo độ khó. Dữ liệu thiếu, hỏng hoặc storage bị chặn đều trở về mặc định an toàn mà không chặn gameplay.
 
 ## Kiểm thử
 
 Unit test bao phủ:
 
 - 500 level ngẫu nhiên qua ba độ khó;
+- 450 lượt bổ sung bao phủ 18 tổ hợp `3 độ khó × 6 kích thước nhập tay`;
 - đúng/sai vị trí và màu;
 - tô thừa ô trắng, bỏ sót, tô đè và tẩy;
 - reset, chữ ký màn mới, ba bước gợi ý;
@@ -99,13 +104,13 @@ Playtest trình duyệt bao phủ click, mouse drag, touch, keyboard, completion
 ## Giới hạn MVP
 
 - Chế độ **kiểm tra ngay** là UI mặc định. `validationMode` đã tách trong level/state để bổ sung chế độ kiểm tra cuối màn.
-- Chưa có mẫu pixel-art, ghi nhớ mẫu hoặc bài sửa lỗi trong bản sao.
+- Các mode nhập tay hiện dùng mẫu random; chưa có pixel-art, ghi nhớ mẫu hoặc bài sửa lỗi trong bản sao.
 - Âm thanh dùng Web Speech API, nên chất giọng phụ thuộc trình duyệt và hệ điều hành.
 - Hai renderer Three.js làm code rõ và hai bảng độc lập, nhưng bundle vẫn mang toàn bộ Three.js; có thể tách vendor chunk khi triển khai production.
 
 ## Hướng mở rộng
 
-- Thêm mức Làm quen 2×2, Khá 4×4 và Thử thách 5×5.
-- Thêm pattern đối xứng, pixel art đơn giản và chế độ ghi nhớ.
+- Thêm preset “Làm quen”, “Pixel art” và “Đối xứng” trên các kích thước hiện có.
+- Thêm pattern đối xứng, pixel art đơn giản và chế độ ghi nhớ cho bảng lớn.
 - Thêm policy kiểm tra cuối màn với nút kiểm tra và highlight nhiều lỗi.
 - Thêm hồ sơ trẻ, thống kê hàng/cột thường nhầm và độ khó thích ứng.

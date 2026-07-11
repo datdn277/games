@@ -1,9 +1,10 @@
-import { DIFFICULTY_ORDER } from "../data/levels.js";
+import { DIFFICULTY_ORDER, normalizeGridSizeMode } from "../data/levels.js";
 
 const STORAGE_KEY = "matrix-color-progress-v1";
 const DEFAULT_PROGRESS = Object.freeze({
   version: 1,
   currentDifficulty: "easy",
+  gridSize: "auto",
   unlockedDifficulty: "easy",
   completedLevels: 0,
   totalStars: 0,
@@ -32,11 +33,13 @@ export class ProgressStore {
     try {
       const parsed = JSON.parse(this.storage.getItem(STORAGE_KEY));
       if (!parsed || parsed.version !== 1 || !DIFFICULTY_ORDER.includes(parsed.currentDifficulty)) return cloneDefault();
-      return {
+      const restored = {
         ...cloneDefault(),
         ...parsed,
         bestStars: { ...DEFAULT_PROGRESS.bestStars, ...(parsed.bestStars ?? {}) }
       };
+      restored.gridSize = normalizeGridSizeMode(restored.gridSize);
+      return restored;
     } catch {
       return cloneDefault();
     }
@@ -49,6 +52,7 @@ export class ProgressStore {
       version: 1,
       bestStars: { ...DEFAULT_PROGRESS.bestStars, ...(progress.bestStars ?? {}) }
     };
+    safe.gridSize = normalizeGridSizeMode(safe.gridSize);
     try {
       this.storage?.setItem(STORAGE_KEY, JSON.stringify(safe));
     } catch {

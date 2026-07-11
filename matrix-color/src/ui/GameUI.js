@@ -1,5 +1,5 @@
 import { COLOR_BY_ID } from "../data/colors.js";
-import { DIFFICULTY_CONFIGS } from "../data/levels.js";
+import { DIFFICULTY_CONFIGS, GRID_SIZE_OPTIONS, MAX_GRID_SIZE, MIN_GRID_SIZE } from "../data/levels.js";
 
 export class GameUI {
   constructor(root) {
@@ -13,6 +13,10 @@ export class GameUI {
       remaining: root.querySelector("#remaining-count"),
       mistakes: root.querySelector("#mistake-count"),
       difficulty: root.querySelector("#difficulty-select"),
+      gridSize: root.querySelector("#grid-size-select"),
+      gridSizeInput: root.querySelector("#grid-size-input"),
+      gridSizeControl: root.querySelector("#custom-size-control"),
+      gridSizeMirror: root.querySelector("#grid-size-mirror"),
       replay: root.querySelector("#replay-button"),
       hint: root.querySelector("#hint-button"),
       eraser: root.querySelector("#eraser-button"),
@@ -35,11 +39,35 @@ export class GameUI {
     this.elements.reset.addEventListener("click", actions.onReset);
     this.elements.next.addEventListener("click", actions.onNext);
     this.elements.difficulty.addEventListener("change", (event) => actions.onDifficultyChange(event.target.value));
+    this.elements.gridSize.addEventListener("change", (event) => {
+      const custom = event.target.value === "custom";
+      this.elements.gridSizeControl.hidden = !custom;
+      if (custom) {
+        this.elements.gridSizeInput.focus();
+        actions.onGridSizeChange(this.elements.gridSizeInput.value);
+      } else {
+        actions.onGridSizeChange("auto");
+      }
+    });
+    this.elements.gridSizeInput.addEventListener("input", (event) => {
+      this.elements.gridSizeMirror.textContent = event.target.value || "?";
+    });
+    this.elements.gridSizeInput.addEventListener("change", (event) => actions.onGridSizeChange(event.target.value));
+    this.elements.gridSizeInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      actions.onGridSizeChange(event.currentTarget.value);
+    });
     this.elements.sound.addEventListener("change", (event) => actions.onSoundChange(event.target.checked));
   }
 
   renderRound(state, progress) {
     this.elements.difficulty.value = state.difficulty;
+    const customSize = state.sizeMode !== "auto";
+    this.elements.gridSize.value = customSize ? "custom" : "auto";
+    this.elements.gridSizeControl.hidden = !customSize;
+    if (customSize) this.elements.gridSizeInput.value = state.sizeMode;
+    this.elements.gridSizeMirror.textContent = customSize ? state.sizeMode : this.elements.gridSizeInput.value;
     this.elements.sound.checked = state.soundEnabled;
     this.elements.completion.hidden = true;
     this.elements.paletteInstruction.textContent = state.autoSelectColor
@@ -125,12 +153,16 @@ export class GameUI {
 
   #template() {
     const options = Object.entries(DIFFICULTY_CONFIGS).map(([id, config]) => `<option value="${id}">${config.label} · ${config.shortLabel}</option>`).join("");
+    const sizeOptions = GRID_SIZE_OPTIONS.map((option) => `<option value="${option.id}">${option.label}</option>`).join("");
     return `
       <main class="game-shell">
         <header class="topbar">
           <a class="home-link" href="../index.html" aria-label="Trở về trang chủ"><span aria-hidden="true">‹</span> Trang chủ</a>
           <div class="title-group"><span class="eyebrow">Quan sát · Đối chiếu · Tô màu</span><h1>Ô Màu Song Sinh</h1></div>
-          <label class="difficulty-picker">Mức<select id="difficulty-select" aria-label="Chọn mức độ">${options}</select></label>
+          <div class="mode-pickers" aria-label="Chế độ chơi">
+            <label class="difficulty-picker"><span class="mode-label">Mức</span><select id="difficulty-select" aria-label="Chọn mức độ">${options}</select></label>
+            <label class="size-picker"><span class="mode-label">Kích thước</span><select id="grid-size-select" aria-label="Chọn cách đặt kích thước ma trận">${sizeOptions}</select><span class="custom-size-control" id="custom-size-control" hidden><input id="grid-size-input" type="number" min="${MIN_GRID_SIZE}" max="${MAX_GRID_SIZE}" step="1" value="3" inputmode="numeric" aria-label="Nhập số hàng và số cột, từ ${MIN_GRID_SIZE} đến ${MAX_GRID_SIZE}"><span aria-hidden="true">× <output id="grid-size-mirror">3</output></span></span></label>
+          </div>
         </header>
 
         <section class="status-strip" aria-label="Nhiệm vụ và tiến độ">

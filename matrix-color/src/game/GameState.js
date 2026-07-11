@@ -7,6 +7,7 @@ export class GameState {
 
   load(level) {
     this.difficulty = level.difficulty;
+    this.sizeMode = level.sizeMode ?? "auto";
     this.rows = level.rows;
     this.columns = level.columns;
     this.levelColors = [...level.colors];
