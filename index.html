@@ -31,6 +31,8 @@
       --letter-2: #ff7aa2;
       --machine-1: #4c8de8;
       --machine-2: #7a52b3;
+      --rabbit-1: #71c86f;
+      --rabbit-2: #ed913f;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -217,6 +219,10 @@
       background: radial-gradient(circle, rgba(76, 141, 232, 0.5), rgba(122, 82, 179, 0));
     }
 
+    .game-card.rabbit-carrot::before {
+      background: radial-gradient(circle, rgba(113, 200, 111, 0.52), rgba(237, 145, 63, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -272,6 +278,10 @@
       letter-spacing: -0.08em;
     }
 
+    .rabbit-carrot .icon-wrap {
+      background: linear-gradient(145deg, rgba(113, 200, 111, 0.3), rgba(237, 145, 63, 0.25));
+    }
+
     .badge {
       display: inline-flex;
       width: fit-content;
@@ -325,6 +335,11 @@
     .vietnamese-machine .badge {
       background: rgba(76, 141, 232, 0.2);
       color: #315f9e;
+    }
+
+    .rabbit-carrot .badge {
+      background: rgba(113, 200, 111, 0.24);
+      color: #347446;
     }
 
     .game-card h2 {
@@ -411,6 +426,10 @@
 
     .vietnamese-machine .cta {
       background: linear-gradient(180deg, var(--machine-1), var(--machine-2));
+    }
+
+    .rabbit-carrot .cta {
+      background: linear-gradient(180deg, var(--rabbit-1), var(--rabbit-2));
     }
 
     @media (max-width: 1080px) {
@@ -625,6 +644,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Tiếng Việt</span>
               <span class="mini-pill">Kéo thả 3D</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card rabbit-carrot" href="./rabit-carrot/index.html" aria-label="Mở game Thỏ Con Tìm Cà Rốt">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🐰🥕</div>
+            <div class="badge">Học bốn hướng</div>
+            <h2>Thỏ Con Tìm Cà Rốt</h2>
+            <p>Điều khiển Thỏ từng ô theo bốn hướng, nhặt đủ cà rốt, tránh chướng ngại rồi trở về hang.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Lên · Xuống</span>
+              <span class="mini-pill">Trái · Phải</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
