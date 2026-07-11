@@ -19,6 +19,8 @@
       --croc-2: #30a7ff;
       --train-1: #ffdd63;
       --train-2: #ff9e39;
+      --pattern-1: #63c7b2;
+      --pattern-2: #ff8b3d;
       --fruit-1: #ffb36a;
       --fruit-2: #ff667d;
       --missing-1: #7fd6ff;
@@ -197,6 +199,10 @@
       background: radial-gradient(circle, rgba(255, 158, 57, 0.52), rgba(255, 158, 57, 0));
     }
 
+    .game-card.train-pattern::before {
+      background: radial-gradient(circle, rgba(43, 169, 143, 0.5), rgba(255, 139, 61, 0));
+    }
+
     .game-card.fruits::before {
       background: radial-gradient(circle, rgba(255, 102, 125, 0.48), rgba(255, 102, 125, 0));
     }
@@ -254,6 +260,11 @@
 
     .train .icon-wrap {
       background: linear-gradient(180deg, rgba(255, 221, 99, 0.28), rgba(255, 158, 57, 0.24));
+    }
+
+    .train-pattern .icon-wrap {
+      background: linear-gradient(145deg, rgba(99, 199, 178, 0.3), rgba(255, 139, 61, 0.24));
+      font-size: 32px;
     }
 
     .fruits .icon-wrap {
@@ -333,6 +344,11 @@
     .train .badge {
       background: rgba(255, 221, 99, 0.34);
       color: #8c4b06;
+    }
+
+    .train-pattern .badge {
+      background: rgba(99, 199, 178, 0.25);
+      color: #176e5c;
     }
 
     .fruits .badge {
@@ -435,6 +451,10 @@
 
     .train .cta {
       background: linear-gradient(180deg, var(--train-1), var(--train-2));
+    }
+
+    .train-pattern .cta {
+      background: linear-gradient(180deg, var(--pattern-1), var(--pattern-2));
     }
 
     .fruits .cta {
@@ -579,6 +599,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Sắp xếp số</span>
               <span class="mini-pill">Kéo thả</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card train-pattern" href="./train-pattern/index.html" aria-label="Mở game Đoàn Tàu Quy Luật">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🚂🔁</div>
+            <div class="badge">Nhận biết quy luật lặp</div>
+            <h2>Đoàn Tàu Quy Luật</h2>
+            <p>Quan sát nhóm toa đang lặp lại, tìm phần tử tiếp theo rồi chạm hoặc kéo toa đúng vào đoàn tàu.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">AB · AAB · ABC</span>
+              <span class="mini-pill">Chạm &amp; kéo</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
