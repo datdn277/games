@@ -37,6 +37,8 @@
       --rabbit-2: #ed913f;
       --matrix-1: #61bda2;
       --matrix-2: #7667d8;
+      --route-1: #ffb84d;
+      --route-2: #e9653f;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -235,6 +237,10 @@
       background: radial-gradient(circle, rgba(118, 103, 216, 0.5), rgba(97, 189, 162, 0));
     }
 
+    .game-card.route-calculator::before {
+      background: radial-gradient(circle, rgba(255, 184, 77, 0.54), rgba(233, 101, 63, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -301,6 +307,11 @@
 
     .matrix-color .icon-wrap {
       background: linear-gradient(145deg, rgba(97, 189, 162, 0.28), rgba(118, 103, 216, 0.24));
+    }
+
+    .route-calculator .icon-wrap {
+      background: linear-gradient(145deg, rgba(255, 184, 77, 0.3), rgba(233, 101, 63, 0.24));
+      font-size: 34px;
     }
 
     .matrix-icon {
@@ -389,6 +400,11 @@
     .matrix-color .badge {
       background: rgba(118, 103, 216, 0.2);
       color: #5b4db1;
+    }
+
+    .route-calculator .badge {
+      background: rgba(255, 184, 77, 0.28);
+      color: #9a4b16;
     }
 
     .game-card h2 {
@@ -487,6 +503,10 @@
 
     .matrix-color .cta {
       background: linear-gradient(180deg, var(--matrix-1), var(--matrix-2));
+    }
+
+    .route-calculator .cta {
+      background: linear-gradient(180deg, var(--route-1), var(--route-2));
     }
 
     @media (max-width: 1080px) {
@@ -752,6 +772,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Ma trận màu</span>
               <span class="mini-pill">Chạm &amp; kéo</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card route-calculator" href="./route-calculator/index.html" aria-label="Mở game Hành Trình Rổ Trái Cây">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🧺➕</div>
+            <div class="badge">Cộng trừ theo hành trình</div>
+            <h2>Hành Trình Rổ Trái Cây</h2>
+            <p>Đi theo từng bước cộng trừ, quan sát trái cây được thêm hoặc bớt trong rổ rồi chọn kết quả.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Cộng · Trừ</span>
+              <span class="mini-pill">Đếm trực quan</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
