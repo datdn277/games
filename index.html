@@ -39,6 +39,8 @@
       --matrix-2: #7667d8;
       --route-1: #ffb84d;
       --route-2: #e9653f;
+      --chess-1: #3a94c5;
+      --chess-2: #163f5b;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -241,6 +243,10 @@
       background: radial-gradient(circle, rgba(255, 184, 77, 0.54), rgba(233, 101, 63, 0));
     }
 
+    .game-card.chess-guide::before {
+      background: radial-gradient(circle, rgba(58, 148, 197, 0.5), rgba(242, 169, 0, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -312,6 +318,11 @@
     .route-calculator .icon-wrap {
       background: linear-gradient(145deg, rgba(255, 184, 77, 0.3), rgba(233, 101, 63, 0.24));
       font-size: 34px;
+    }
+
+    .chess-guide .icon-wrap {
+      background: linear-gradient(145deg, rgba(58, 148, 197, 0.28), rgba(242, 169, 0, 0.24));
+      font-size: 36px;
     }
 
     .matrix-icon {
@@ -405,6 +416,11 @@
     .route-calculator .badge {
       background: rgba(255, 184, 77, 0.28);
       color: #9a4b16;
+    }
+
+    .chess-guide .badge {
+      background: rgba(58, 148, 197, 0.2);
+      color: #185879;
     }
 
     .game-card h2 {
@@ -507,6 +523,10 @@
 
     .route-calculator .cta {
       background: linear-gradient(180deg, var(--route-1), var(--route-2));
+    }
+
+    .chess-guide .cta {
+      background: linear-gradient(180deg, var(--chess-1), var(--chess-2));
     }
 
     @media (max-width: 1080px) {
@@ -789,6 +809,23 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Cộng · Trừ</span>
               <span class="mini-pill">Đếm trực quan</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card chess-guide" href="./chess-guide/static/index.html" aria-label="Mở game Học Viện Cờ Vua Nhí">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">♜♞</div>
+            <div class="badge">Học cách đi quân cờ</div>
+            <h2>Học Viện Cờ Vua Nhí</h2>
+            <p>Khám phá cách đi của quân Xe, Tượng và Mã trên bàn cờ 3D qua từng bài học trực quan.</p>
+          </div>
+
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">Xe · Tượng · Mã</span>
+              <span class="mini-pill">Bàn cờ 3D</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>
