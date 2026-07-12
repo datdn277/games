@@ -10,6 +10,7 @@ export class GameUI {
       counter: root.querySelector("#carrot-counter"),
       progress: root.querySelector("#carrot-progress"),
       levelSelect: root.querySelector("#level-select"),
+      gridSizeSelect: root.querySelector("#grid-size-select"),
       autoLevel: root.querySelector("#auto-level"),
       guideToggle: root.querySelector("#guide-toggle"),
       soundToggle: root.querySelector("#sound-toggle"),
@@ -29,12 +30,16 @@ export class GameUI {
     this.elements.reset.addEventListener("click", actions.onReset);
     this.elements.next.addEventListener("click", actions.onNext);
     this.elements.levelSelect.addEventListener("change", (event) => actions.onLevelChange(Number(event.target.value)));
+    this.elements.gridSizeSelect.addEventListener("change", (event) => {
+      actions.onGridSizeChange(event.target.value === "auto" ? null : Number(event.target.value));
+    });
     this.elements.guideToggle.addEventListener("change", (event) => actions.onGuideChange(event.target.checked));
     this.elements.soundToggle.addEventListener("change", (event) => actions.onSoundChange(event.target.checked));
   }
 
-  renderRound(state) {
+  renderRound(state, { gridSizeOverride = null } = {}) {
     this.elements.levelSelect.value = String(state.level);
+    this.elements.gridSizeSelect.value = gridSizeOverride ? String(gridSizeOverride) : "auto";
     this.elements.guideToggle.checked = state.guideEnabled;
     this.elements.soundToggle.checked = state.soundEnabled;
     this.elements.dialog.hidden = true;
@@ -101,14 +106,25 @@ export class GameUI {
             <span class="title-kicker">Học bốn hướng cùng</span>
             <h1>Thỏ Con Tìm Cà Rốt</h1>
           </div>
-          <label class="level-picker">Màn
+          <div class="game-options">
+            <label class="level-picker">Màn
             <select id="level-select" aria-label="Chọn độ khó">
               <option value="1">1 · Làm quen</option>
               <option value="2">2 · Đi xa hơn</option>
               <option value="3">3 · Đi vòng</option>
               <option value="4">4 · Thử thách</option>
             </select>
-          </label>
+            </label>
+            <label class="level-picker">Lưới
+              <select id="grid-size-select" aria-label="Chọn kích thước lưới ma trận">
+                <option value="auto">Theo màn</option>
+                <option value="3">3 × 3</option>
+                <option value="4">4 × 4</option>
+                <option value="5">5 × 5</option>
+                <option value="6">6 × 6</option>
+              </select>
+            </label>
+          </div>
         </header>
 
         <section class="play-layout" aria-label="Khu vực chơi">

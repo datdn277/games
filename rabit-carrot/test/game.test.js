@@ -150,6 +150,23 @@ test("màn 1 luôn có cà rốt cách thỏ đúng một ô", () => {
   assert.equal(level.obstacles.length, 0);
 });
 
+test("chế độ lưới tùy chọn sinh màn hợp lệ từ 3×3 đến 6×6", () => {
+  let seed = 20260712;
+  const random = () => {
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    return seed / 4294967296;
+  };
+  const generator = new LevelGenerator(random);
+  for (const levelNumber of [1, 2, 3, 4]) {
+    for (const size of [3, 4, 5, 6]) {
+      const level = generator.generate(levelNumber, { gridSize: size });
+      assert.equal(level.rows, size);
+      assert.equal(level.columns, size);
+      assert.equal(validateLevel(level), true, `Màn ${levelNumber}, lưới ${size}×${size} phải hợp lệ`);
+    }
+  }
+});
+
 test("phím mũi tên map đúng và phím khác bị bỏ qua", () => {
   assert.equal(keyToDirection("ArrowUp"), "up");
   assert.equal(keyToDirection("ArrowDown"), "down");

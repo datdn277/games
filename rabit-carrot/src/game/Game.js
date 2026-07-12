@@ -22,6 +22,7 @@ export class Game {
     this.ui = new GameUI(root);
     this.scene = new GardenScene(this.ui.elements.canvasHost);
     this.levelNumber = 1;
+    this.gridSize = null;
     this.soundEnabled = true;
     this.completionTimer = null;
   }
@@ -33,6 +34,7 @@ export class Game {
       onReset: () => this.resetLevel(),
       onNext: () => this.nextLevel(),
       onLevelChange: (level) => this.startLevel(level),
+      onGridSizeChange: (size) => this.setGridSize(size),
       onGuideChange: (enabled) => this.setGuide(enabled),
       onSoundChange: (enabled) => this.setSound(enabled)
     });
@@ -44,12 +46,12 @@ export class Game {
   startLevel(levelNumber, { reuse = false } = {}) {
     clearTimeout(this.completionTimer);
     this.levelNumber = Math.min(4, Math.max(1, levelNumber));
-    if (!reuse || !this.currentLevelData) this.currentLevelData = this.generator.generate(this.levelNumber);
+    if (!reuse || !this.currentLevelData) this.currentLevelData = this.generator.generate(this.levelNumber, { gridSize: this.gridSize });
     this.state = new GameState(structuredClone(this.currentLevelData));
     this.state.soundEnabled = this.soundEnabled;
     this.audio.setEnabled(this.soundEnabled);
     this.scene.build(this.state);
-    this.ui.renderRound(this.state);
+    this.ui.renderRound(this.state, { gridSizeOverride: this.gridSize });
     this.ui.setControlsEnabled(true);
     this.input.setEnabled(true);
     const prompt = "Hãy giúp Thỏ nhặt cà rốt.";
@@ -59,6 +61,11 @@ export class Game {
 
   resetLevel() {
     this.startLevel(this.levelNumber, { reuse: true });
+  }
+
+  setGridSize(size) {
+    this.gridSize = size;
+    this.startLevel(this.levelNumber);
   }
 
   nextLevel() {

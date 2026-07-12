@@ -239,7 +239,7 @@ export class GardenScene {
   }
 
   #fitCamera() {
-    this.camera.userData.viewSize = Math.max(this.rows * 1.62 + 1.5, 6.4);
+    this.camera.userData.viewSize = Math.max(Math.max(this.rows, this.columns) * 1.62 + 1.5, 6.4);
   }
 
   #bindResize() {

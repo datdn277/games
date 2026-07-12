@@ -115,8 +115,16 @@ h1 {
   letter-spacing: -0.045em;
 }
 
-.level-picker {
+.game-options {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.level-picker {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -624,7 +632,7 @@ h1 {
   }
 
   .home-link,
-  .level-picker {
+  .game-options {
     grid-row: 2;
   }
 
@@ -682,7 +690,7 @@ h1 {
     font-size: 13px;
   }
 
-  .level-picker {
+  .game-options {
     font-size: 13px;
   }
 

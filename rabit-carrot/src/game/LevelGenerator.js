@@ -7,6 +7,8 @@ export const LEVEL_CONFIG = Object.freeze({
   4: { rows: 4, columns: 4, carrotMin: 3, carrotMax: 3, obstacleMin: 2, obstacleMax: 3, guideDefault: false }
 });
 
+export const GRID_SIZE_LIMITS = Object.freeze({ min: 3, max: 6 });
+
 const OBSTACLE_TYPES = ["tree", "rock", "water"];
 
 function randomInt(random, min, max) {
@@ -48,9 +50,9 @@ export class LevelGenerator {
     this.random = random;
   }
 
-  generate(levelNumber = 1) {
+  generate(levelNumber = 1, { gridSize = null } = {}) {
     const safeLevel = Math.min(4, Math.max(1, Number(levelNumber) || 1));
-    const config = LEVEL_CONFIG[safeLevel];
+    const config = this.#configFor(safeLevel, gridSize);
 
     for (let attempt = 0; attempt < 400; attempt += 1) {
       const candidate = this.#createCandidate(safeLevel, config);
@@ -103,9 +105,29 @@ export class LevelGenerator {
       start: level.player,
       target
     }));
-    if (paths.some((path) => !path || path.length > 9)) return false;
+    const longestSuitablePath = Math.max(9, Math.ceil((level.rows + level.columns) * 1.1));
+    if (paths.some((path) => !path || path.length > longestSuitablePath)) return false;
     if (levelNumber !== 4) return true;
     return paths.some((path) => path.length >= 4);
+  }
+
+  #configFor(levelNumber, gridSize) {
+    const base = LEVEL_CONFIG[levelNumber];
+    if (!Number.isFinite(gridSize)) return base;
+
+    const size = Math.min(GRID_SIZE_LIMITS.max, Math.max(GRID_SIZE_LIMITS.min, Math.round(gridSize)));
+    const extraSize = Math.max(0, size - 4);
+    if (levelNumber === 1) return { ...base, rows: size, columns: size };
+
+    return {
+      ...base,
+      rows: size,
+      columns: size,
+      carrotMin: base.carrotMin + Math.floor(extraSize / 2),
+      carrotMax: base.carrotMax + extraSize,
+      obstacleMin: base.obstacleMin + Math.floor(extraSize / 2),
+      obstacleMax: base.obstacleMax + extraSize
+    };
   }
 
   #fallback(levelNumber, config) {
