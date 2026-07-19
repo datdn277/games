@@ -23,6 +23,7 @@ import { HintController } from "../ui/HintController";
 import type { BoardState, PieceType, Position } from "./GameState";
 import { createInitialGameState, positionKey, samePosition } from "./GameState";
 import { LessonManager } from "./LessonManager";
+import { PracticeSession } from "./PracticeSession";
 import { calculateStars, ProgressStorage, type ProgressData } from "./ProgressStorage";
 
 const BADGES: Record<PieceType, string> = {
@@ -39,6 +40,7 @@ export class ChessAcademyGame {
   private readonly chessBoard = new ChessBoard();
   private readonly engine = new MoveEngine();
   private readonly lessons = new LessonManager();
+  private readonly practice = new PracticeSession();
   private readonly storage = new ProgressStorage();
   private readonly hintController = new HintController();
   private readonly animation: AnimationController;
@@ -50,6 +52,7 @@ export class ChessAcademyGame {
   private boardState: BoardState | null = null;
   private currentPieceMenu: PieceType | null = null;
   private lessonToken = 0;
+  private practiceLocked = false;
 
   constructor(root: HTMLElement) {
     this.progress = this.storage.load();
@@ -105,6 +108,7 @@ export class ChessAcademyGame {
     this.ui.setActions({
       choosePiece: (piece) => this.showLessons(piece),
       chooseLesson: (index) => this.startLesson(this.currentPieceMenu ?? "rook", index),
+      startPractice: (piece) => this.startPractice(piece),
       backToPieces: () => this.showPieces(),
       backToLessons: () => this.currentPieceMenu ? this.showLessons(this.currentPieceMenu) : this.showPieces(),
       hint: () => this.useHint(),
@@ -123,6 +127,9 @@ export class ChessAcademyGame {
   private showPieces(): void {
     this.lessonToken += 1;
     this.audio.stop();
+    this.practice.stop();
+    this.practiceLocked = false;
+    this.input.setEnabled(false);
     this.state.interactionLocked = true;
     this.currentPieceMenu = null;
     this.ui.showPieceMenu(this.progress);
@@ -131,12 +138,17 @@ export class ChessAcademyGame {
   private showLessons(piece: PieceType): void {
     this.lessonToken += 1;
     this.audio.stop();
+    this.practice.stop();
+    this.practiceLocked = false;
+    this.input.setEnabled(false);
     this.state.interactionLocked = true;
     this.currentPieceMenu = piece;
     this.ui.showLessonMenu(piece, this.lessons.getLessons(piece), this.progress);
   }
 
   private startLesson(piece: PieceType, index: number): void {
+    this.practice.stop();
+    this.practiceLocked = false;
     const lesson = this.lessons.getLesson(piece, index);
     this.currentPieceMenu = piece;
     const board: BoardState = {
@@ -166,6 +178,24 @@ export class ChessAcademyGame {
     if (lesson.objective === "tutorial") window.setTimeout(() => this.playTutorial(token), 700);
   }
 
+  private startPractice(piece: PieceType): void {
+    this.lessonToken += 1;
+    this.audio.stop();
+    this.currentPieceMenu = piece;
+    this.practiceLocked = false;
+    this.state = {
+      ...createInitialGameState(this.audio.isEnabled()),
+      currentPiece: piece,
+    };
+    const board = this.practice.start(piece);
+    this.boardState = board;
+    this.chessBoard.load(board);
+    this.ui.startPractice(piece, board);
+    this.ui.setVoice(this.audio.isEnabled());
+    this.input.setEnabled(true);
+    this.audio.speak(`Có ngôi sao chỉ cần một bước, có ngôi sao cần nhiều bước. Chạm vào quân ${PIECE_NAMES[piece]} và tìm đường đến ngôi sao.`);
+  }
+
   private async playTutorial(token: number): Promise<void> {
     const lesson = this.state.currentLesson;
     const board = this.boardState;
@@ -186,6 +216,10 @@ export class ChessAcademyGame {
   }
 
   private handleSquare(position: Position): void {
+    if (this.practice.isActive()) {
+      this.handlePracticeSquare(position);
+      return;
+    }
     const lesson = this.state.currentLesson;
     const board = this.boardState;
     if (!lesson || !board || this.state.interactionLocked || this.state.completed || lesson.objective === "tutorial") return;
@@ -203,6 +237,90 @@ export class ChessAcademyGame {
       return;
     }
     void this.tryMove(position);
+  }
+
+  private handlePracticeSquare(position: Position): void {
+    const board = this.practice.getBoard();
+    if (!board || this.practiceLocked) return;
+    const piece = board.piece.type;
+    if (samePosition(position, board.piece.position)) {
+      const moves = this.practice.selectPiece();
+      this.chessBoard.clearHighlights();
+      this.chessBoard.setSquareState(board.piece.position, "selected");
+      this.chessBoard.showPracticeMoves(moves, board.targets);
+      this.ui.setPracticeMoves(moves, board.targets);
+      this.ui.setFeedback(`Chọn một chấm tròn để đi một bước. Con hãy suy nghĩ đường tới ngôi sao nhé!`, "hint");
+      return;
+    }
+    if (!this.practice.isSelected()) {
+      this.ui.setFeedback(`Chạm vào quân ${PIECE_NAMES[piece]} trước để hiện các nước đi nhé!`, "hint");
+      this.audio.speak(`Con hãy chạm vào quân ${PIECE_NAMES[piece]} trước nhé.`);
+      return;
+    }
+    if (!this.practice.canMove(position)) {
+      this.explainPracticeWrong(position, board);
+      return;
+    }
+    void this.tryPracticeMove(position);
+  }
+
+  private async tryPracticeMove(destination: Position): Promise<void> {
+    const board = this.practice.getBoard();
+    if (!board || !this.practice.canMove(destination)) return;
+    const piece = board.piece.type;
+    const from = { ...board.piece.position };
+    const reachedTarget = this.practice.isTarget(destination);
+    const token = this.lessonToken;
+    this.practiceLocked = true;
+    this.input.setEnabled(false);
+    await this.animation.move(from, destination, piece);
+    if (token !== this.lessonToken || !this.practice.isActive()) return;
+
+    this.chessBoard.setPiecePosition(destination);
+    if (reachedTarget) this.chessBoard.celebrateTarget(destination);
+    const result = this.practice.commitMove(destination);
+    this.ui.syncAccessibleBoard(board);
+
+    if (result.status === "target") {
+      this.ui.setPracticeProgress(result.starsFound);
+      this.ui.setFeedback(`Tuyệt vời! Con đã tìm được ngôi sao thứ ${result.starsFound}!`, "success");
+      this.audio.speak(`Tuyệt vời! Con đã tìm được ngôi sao thứ ${result.starsFound}.`);
+      await this.animation.celebrate();
+      await new Promise((resolve) => window.setTimeout(resolve, 220));
+      if (token !== this.lessonToken || !this.practice.isActive()) return;
+      this.chessBoard.setTargets(board.targets);
+      this.chessBoard.clearHighlights();
+      this.ui.syncAccessibleBoard(board);
+      this.ui.setFeedback(`Ngôi sao mới xuất hiện! Có thể ở gần hoặc ở xa. Chạm vào quân ${PIECE_NAMES[piece]} nhé.`, "success");
+    } else {
+      this.chessBoard.clearHighlights();
+      this.ui.setFeedback(`Đúng rồi! Ngôi sao vẫn ở đó. Chạm lại vào quân ${PIECE_NAMES[piece]} để chọn bước tiếp theo.`, "success");
+    }
+
+    this.practiceLocked = false;
+    this.input.setEnabled(true);
+  }
+
+  private explainPracticeWrong(destination: Position, board: BoardState): void {
+    const piece = board.piece.type;
+    const from = board.piece.position;
+    const rowDelta = Math.abs(destination.row - from.row);
+    const colDelta = Math.abs(destination.col - from.col);
+    let reason: string;
+    if (piece === "rook") {
+      reason = rowDelta > 0 && colDelta > 0
+        ? "Quân Xe chỉ đi theo đường ngang hoặc đường dọc."
+        : "Ô này chưa nằm trên đường đi của quân Xe.";
+    } else if (piece === "bishop") {
+      reason = rowDelta === 0 || colDelta === 0 || rowDelta !== colDelta
+        ? "Quân Tượng chỉ đi theo đường chéo."
+        : "Ô này chưa nằm trên đường đi của quân Tượng.";
+    } else {
+      reason = "Quân Mã đi hai ô rồi rẽ một ô, tạo thành hình chữ L.";
+    }
+    this.chessBoard.flashIncorrect(destination);
+    this.ui.setFeedback(`${reason} Hãy chọn một ô có chấm tròn nhé!`, "try-again");
+    this.audio.speak(`${reason} Con hãy chọn một ô có chấm tròn nhé.`);
   }
 
   private selectPiece(): void {
@@ -355,6 +473,11 @@ export class ChessAcademyGame {
   }
 
   private replayVoice(): void {
+    const practiceBoard = this.practice.getBoard();
+    if (practiceBoard) {
+      this.audio.speak(`Có ngôi sao chỉ cần một bước, có ngôi sao cần nhiều bước. Chạm vào quân ${PIECE_NAMES[practiceBoard.piece.type]} và tìm đường đến ngôi sao.`);
+      return;
+    }
     const lesson = this.state.currentLesson;
     if (lesson) this.audio.speak(lesson.voiceInstruction);
     else this.audio.speak("Chào mừng đến với Học Viện Cờ Vua Nhí.");
@@ -415,7 +538,9 @@ export class ChessAcademyGame {
     const width = Math.max(320, rect.width);
     const height = Math.max(320, rect.height);
     const aspect = width / height;
-    const verticalSize = aspect < 0.8 ? 10.2 : aspect > 1.55 ? 8.7 : 9.3;
+    const preferredVerticalSize = aspect < 0.8 ? 10.2 : aspect > 1.55 ? 8.7 : 9.3;
+    const minimumHorizontalSize = 8.4;
+    const verticalSize = Math.max(preferredVerticalSize, minimumHorizontalSize / aspect);
     this.camera.top = verticalSize / 2;
     this.camera.bottom = -verticalSize / 2;
     this.camera.left = (-verticalSize * aspect) / 2;

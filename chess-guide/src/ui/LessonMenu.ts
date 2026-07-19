@@ -40,6 +40,17 @@ export class LessonMenu {
         <button class="round-button back-to-pieces" aria-label="Quay lại chọn quân">←</button>
         <p class="eyebrow">LỘ TRÌNH CỦA QUÂN ${PIECE_NAMES[piece].toUpperCase()}</p>
         <h2 id="lesson-picker-title">Chọn bài học</h2>
+        <div class="practice-callout practice-callout--${piece}">
+          <span class="practice-callout__star" aria-hidden="true">★</span>
+          <span class="practice-callout__copy">
+            <small>LUYỆN TẬP KHÔNG GIỚI HẠN</small>
+            <strong>Săn sao cùng quân ${PIECE_NAMES[piece]}</strong>
+            <span>Có sao ở gần, có sao ở xa: quan sát nước đi và chọn đường phù hợp.</span>
+          </span>
+          <button class="practice-button" data-practice="${piece}" aria-label="Bắt đầu luyện tập săn sao với quân ${PIECE_NAMES[piece]}">
+            Chơi ngay <span aria-hidden="true">→</span>
+          </button>
+        </div>
         <div class="lesson-list">
           ${lessons.map((lesson, index) => {
             const stars = progress.starsByLesson[lesson.id] ?? 0;

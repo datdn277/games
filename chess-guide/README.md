@@ -20,6 +20,8 @@ npm run build
 npm run test
 ```
 
+`npm run build` xuất bản trực tiếp vào `static/` với đường dẫn asset tương đối để game chạy được khi deploy cùng trang chủ tĩnh.
+
 `node_modules/` và `dist/` được loại khỏi source bằng `.gitignore`. `package-lock.json` được tạo từ registry npm công khai.
 
 ## Phân tích và quyết định thiết kế
@@ -43,6 +45,7 @@ Các quyết định chính:
 ## Nội dung MVP
 
 - 18 lesson dữ liệu: 6 Xe, 6 Tượng, 6 Mã.
+- Chế độ **Săn sao** không giới hạn cho từng quân: mỗi cặp mục tiêu gồm một sao đi 1 nước và một sao đi 2–4 nước theo thứ tự ngẫu nhiên, chạm quân để hiện các chấm đi và tới sao để sinh mục tiêu mới.
 - Mỗi quân có đủ ba dạng: tutorial, đến mục tiêu, chọn tất cả ô hợp lệ.
 - Xe đi ngang/dọc, dừng trước vật cản.
 - Tượng đi chéo, luôn ở ô cùng màu, dừng trước vật cản.
@@ -68,12 +71,14 @@ src/
     GameState.ts               # Kiểu dữ liệu serializable
     LessonManager.ts           # Điều hướng lesson
     LessonGenerator.ts         # Sinh và validate lesson ngẫu nhiên
+    PracticeSession.ts         # State và vòng lặp luyện tập săn sao vô hạn
     ProgressStorage.ts         # localStorage + tính sao
   chess/
     ChessBoard.ts              # Render adapter cho bàn 3D
     ChessSquare.ts             # Tile và trạng thái highlight
     ChessPiece.ts              # Mô hình procedural Xe/Tượng/Mã
     MoveEngine.ts              # API luật độc lập UI
+    MovePathfinder.ts          # BFS tìm đường ngắn nhất trên đồ thị nước đi
     BoardCoordinates.ts        # Logic board ↔ Three.js world
     rules/                     # RookRule/BishopRule/KnightRule
   lessons/                     # Lesson model + 18 level + TruthQuiz
@@ -94,7 +99,7 @@ src/
 
 ## Kiểm thử
 
-Vitest hiện có 20 test:
+Vitest hiện có 26 test:
 
 - Xe giữa bàn, bị chặn, không đi chéo.
 - Tượng bốn đường chéo, bị chặn, không đi ngang/dọc, giữ màu ô.
@@ -102,6 +107,7 @@ Vitest hiện có 20 test:
 - Sinh và validate 300 lesson ngẫu nhiên.
 - Không trùng quân/mục tiêu/vật cản; mọi `reach-target` có lời giải; lesson Mã dùng delta chữ L.
 - Tính thưởng 1–3 sao.
+- Phiên săn sao cân bằng chính xác 50/50 mục tiêu 1 nước và 2–4 nước, giữ nguyên sao khi đi trung gian và tăng bộ đếm khi tới nơi.
 
 Browser playtest đã kiểm tra:
 
@@ -112,6 +118,7 @@ Browser playtest đã kiểm tra:
 - completion modal, sao và lưu tiến trình;
 - voice toggle không làm game phụ thuộc âm thanh;
 - desktop 1280×720, tablet ngang 1024×768, tablet dọc 768×1024;
+- màn săn sao desktop 1280×800 và mobile 390×844, gồm hiện chấm nước đi, đổi sao, tăng bộ đếm và thoát;
 - console không có error/warning trong các luồng đã chạy.
 
 ## Mở rộng sau MVP

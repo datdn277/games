@@ -79,13 +79,7 @@ export class ChessBoard {
     this.piece.position.copy(boardToWorldPosition(board.piece.position, board.rows, board.cols, 0.09));
     this.content.add(this.piece);
 
-    board.targets.forEach((position, index) => {
-      const target = this.createStar(index);
-      target.position.copy(boardToWorldPosition(position, board.rows, board.cols, 0.16));
-      target.userData.baseY = target.position.y;
-      this.targets.push(target);
-      this.content.add(target);
-    });
+    this.setTargets(board.targets);
 
     board.blockers.forEach((position, index) => {
       const blocker = index % 2 === 0 ? this.createRock() : this.createTree();
@@ -109,6 +103,24 @@ export class ChessBoard {
     this.piece.position.copy(boardToWorldPosition(position, this.board.rows, this.board.cols, 0.09));
   }
 
+  setTargets(positions: Position[]): void {
+    if (!this.board) return;
+    this.targets.forEach((target) => {
+      this.content.remove(target);
+      disposeGroup(target);
+    });
+    this.targets = [];
+    const nextTargets = positions.map((position) => ({ ...position }));
+    this.board.targets = nextTargets;
+    nextTargets.forEach((position, index) => {
+      const target = this.createStar(index);
+      target.position.copy(boardToWorldPosition(position, this.board!.rows, this.board!.cols, 0.16));
+      target.userData.baseY = target.position.y;
+      this.targets.push(target);
+      this.content.add(target);
+    });
+  }
+
   getWorldPosition(position: Position, y = 0.09): Vector3 {
     if (!this.board) return new Vector3();
     return boardToWorldPosition(position, this.board.rows, this.board.cols, y);
@@ -128,6 +140,13 @@ export class ChessBoard {
     for (const move of moves) {
       const target = targets.some((candidate) => samePosition(candidate, move));
       this.setSquareState(move, target ? "capture-target" : hinted ? "hinted" : "valid-move");
+    }
+  }
+
+  showPracticeMoves(moves: Position[], targets: Position[]): void {
+    for (const move of moves) {
+      const target = targets.some((candidate) => samePosition(candidate, move));
+      this.setSquareState(move, target ? "practice-target" : "practice-move");
     }
   }
 

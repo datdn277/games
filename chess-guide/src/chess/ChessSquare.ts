@@ -1,8 +1,10 @@
 import {
   BoxGeometry,
+  CircleGeometry,
   Color,
   Group,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   RingGeometry,
 } from "three";
@@ -16,7 +18,9 @@ export type SquareState =
   | "lesson-target"
   | "blocked"
   | "incorrect"
-  | "hinted";
+  | "hinted"
+  | "practice-move"
+  | "practice-target";
 
 const STATE_COLORS: Record<SquareState, number> = {
   normal: 0xffffff,
@@ -27,12 +31,15 @@ const STATE_COLORS: Record<SquareState, number> = {
   blocked: 0xc6b29a,
   incorrect: 0xff997f,
   hinted: 0xb9e6ff,
+  "practice-move": 0xffffff,
+  "practice-target": 0xffffff,
 };
 
 export class ChessSquare {
   readonly group = new Group();
   readonly mesh: Mesh<BoxGeometry, MeshStandardMaterial>;
   private readonly marker: Mesh<RingGeometry, MeshStandardMaterial>;
+  private readonly practiceMarker: Mesh<CircleGeometry, MeshBasicMaterial>;
   private state: SquareState = "normal";
 
   constructor(readonly position: Position, light: boolean) {
@@ -54,12 +61,22 @@ export class ChessSquare {
     this.marker.position.y = 0.09;
     this.marker.visible = false;
     this.group.add(this.marker);
+
+    this.practiceMarker = new Mesh(
+      new CircleGeometry(0.22, 28),
+      new MeshBasicMaterial({ color: 0x1b9b73, transparent: true, opacity: 0.52, depthWrite: false }),
+    );
+    this.practiceMarker.rotation.x = -Math.PI / 2;
+    this.practiceMarker.position.y = 0.105;
+    this.practiceMarker.visible = false;
+    this.group.add(this.practiceMarker);
   }
 
   setState(state: SquareState): void {
     this.state = state;
     const baseColor = this.mesh.userData.baseColor as number;
-    this.mesh.material.color.set(state === "normal" ? baseColor : STATE_COLORS[state]);
+    const practiceState = state === "practice-move" || state === "practice-target";
+    this.mesh.material.color.set(state === "normal" || practiceState ? baseColor : STATE_COLORS[state]);
     this.mesh.material.emissive = new Color(
       state === "incorrect" ? 0x6b120a : state === "selected" ? 0x075985 : 0x000000,
     );
@@ -69,6 +86,10 @@ export class ChessSquare {
       state === "capture-target" ? 0xf2a900 : state === "hinted" ? 0x267cc9 : 0x147d64,
     );
     this.marker.scale.setScalar(state === "hinted" ? 1.18 : 1);
+    this.practiceMarker.visible = practiceState;
+    this.practiceMarker.material.color.set(state === "practice-target" ? 0xf1ab16 : 0x168f6a);
+    this.practiceMarker.material.opacity = state === "practice-target" ? 0.68 : 0.48;
+    this.practiceMarker.scale.setScalar(state === "practice-target" ? 1.16 : 1);
   }
 
   getState(): SquareState {

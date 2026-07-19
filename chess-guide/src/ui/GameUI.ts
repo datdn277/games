@@ -8,6 +8,7 @@ import { LessonMenu } from "./LessonMenu";
 export type UIActions = {
   choosePiece: (piece: PieceType) => void;
   chooseLesson: (index: number) => void;
+  startPractice: (piece: PieceType) => void;
   backToPieces: () => void;
   backToLessons: () => void;
   hint: () => void;
@@ -61,6 +62,7 @@ export class GameUI {
           <button id="reset-button" class="game-button game-button--quiet" aria-label="Làm lại bài học">↻ <span>Làm lại</span></button>
           <button id="check-button" class="game-button game-button--primary" aria-label="Kiểm tra các ô đã chọn" hidden>✓ <span>Kiểm tra</span></button>
           <button id="understand-button" class="game-button game-button--primary" aria-label="Con đã hiểu bài hướng dẫn" hidden>✨ <span>Con đã hiểu</span></button>
+          <button id="practice-exit-button" class="game-button game-button--exit" aria-label="Thoát luyện tập săn sao" hidden>← <span>Thoát luyện tập</span></button>
         </footer>
         <div id="lesson-menu" class="modal-layer"></div>
         <div id="completion" class="modal-layer" hidden></div>
@@ -79,6 +81,7 @@ export class GameUI {
 
   showPieceMenu(progress: ProgressData): void {
     this.currentPiece = null;
+    this.setPracticeShell(false);
     this.completion.hidden = true;
     this.menu.renderPieceChoice(progress);
     this.bindMenuEvents();
@@ -86,12 +89,15 @@ export class GameUI {
 
   showLessonMenu(piece: PieceType, lessons: Lesson[], progress: ProgressData): void {
     this.currentPiece = piece;
+    this.setPracticeShell(false);
     this.completion.hidden = true;
     this.menu.renderLessons(piece, lessons, progress);
     this.bindMenuEvents();
   }
 
   startLesson(lesson: Lesson, index: number, total: number, board: BoardState): void {
+    this.setPracticeShell(false);
+    this.setLessonControls(lesson);
     this.menu.hide();
     this.completion.hidden = true;
     this.byId("lesson-title").textContent = lesson.title;
@@ -99,11 +105,42 @@ export class GameUI {
     this.byId("lesson-progress").textContent = `Bài ${index + 1}/${total}`;
     this.byId("piece-badge").textContent = lesson.piece === "rook" ? "♜" : lesson.piece === "bishop" ? "♝" : "♞";
     this.byId("piece-badge").className = `piece-badge piece-badge--${lesson.piece}`;
-    this.byId<HTMLButtonElement>("check-button").hidden = lesson.objective !== "select-valid-squares";
-    this.byId<HTMLButtonElement>("understand-button").hidden = lesson.objective !== "tutorial";
     this.byId("hint-step").textContent = "0/3";
     this.setFeedback(lesson.instruction, "neutral");
     this.renderAccessibleBoard(board);
+  }
+
+  startPractice(piece: PieceType, board: BoardState): void {
+    this.currentPiece = piece;
+    this.setPracticeShell(true);
+    this.menu.hide();
+    this.completion.hidden = true;
+    this.byId("lesson-title").textContent = `Săn sao cùng quân ${PIECE_NAMES[piece]}`;
+    this.byId("instruction").textContent = "Tìm đường tới ngôi sao";
+    this.byId("lesson-progress").textContent = "⭐ 0 ngôi sao";
+    this.byId("piece-badge").textContent = piece === "rook" ? "♜" : piece === "bishop" ? "♝" : "♞";
+    this.byId("piece-badge").className = `piece-badge piece-badge--${piece}`;
+    this.setFeedback(`Có sao chỉ cần một bước, có sao cần nhiều bước. Chạm vào quân ${PIECE_NAMES[piece]} để bắt đầu!`, "neutral");
+    this.renderAccessibleBoard(board);
+  }
+
+  setPracticeProgress(starsFound: number): void {
+    this.byId("lesson-progress").textContent = `⭐ ${starsFound} ngôi sao`;
+  }
+
+  setPracticeMoves(moves: Position[], targets: Position[]): void {
+    const moveKeys = new Set(moves.map((position) => `${position.row},${position.col}`));
+    const targetKeys = new Set(targets.map((position) => `${position.row},${position.col}`));
+    this.root.querySelectorAll<HTMLButtonElement>("[data-square]").forEach((button) => {
+      const key = button.dataset.square ?? "";
+      const valid = moveKeys.has(key);
+      const baseLabel = button.dataset.baseLabel ?? button.getAttribute("aria-label") ?? "Ô cờ";
+      button.dataset.valid = String(valid);
+      button.setAttribute(
+        "aria-label",
+        valid ? `${baseLabel}, nước đi hợp lệ${targetKeys.has(key) ? ", có ngôi sao" : ""}` : baseLabel,
+      );
+    });
   }
 
   setFeedback(message: string, tone: FeedbackTone): void {
@@ -169,7 +206,9 @@ export class GameUI {
         const isBlocked = board.blockers.some((blocker) => blocker.row === row && blocker.col === col);
         button.dataset.square = `${row},${col}`;
         button.setAttribute("role", "gridcell");
-        button.setAttribute("aria-label", `Hàng ${row + 1}, cột ${col + 1}${isPiece ? `, quân ${PIECE_NAMES[board.piece.type]}` : ""}${isTarget ? ", ngôi sao" : ""}${isBlocked ? ", vật cản" : ""}`);
+        const label = `Hàng ${row + 1}, cột ${col + 1}${isPiece ? `, quân ${PIECE_NAMES[board.piece.type]}` : ""}${isTarget ? ", ngôi sao" : ""}${isBlocked ? ", vật cản" : ""}`;
+        button.dataset.baseLabel = label;
+        button.setAttribute("aria-label", label);
         button.addEventListener("click", () => this.actions?.selectSquare(position));
         button.addEventListener("keydown", (event) => this.handleGridArrow(event, row, col, board.rows, board.cols));
         accessBoard.appendChild(button);
@@ -202,6 +241,7 @@ export class GameUI {
     this.byId("reset-button").addEventListener("click", () => this.actions?.reset());
     this.byId("check-button").addEventListener("click", () => this.actions?.checkSelection());
     this.byId("understand-button").addEventListener("click", () => this.actions?.understand());
+    this.byId("practice-exit-button").addEventListener("click", () => this.actions?.backToLessons());
   }
 
   private bindMenuEvents(): void {
@@ -211,6 +251,9 @@ export class GameUI {
     this.lessonOverlay.querySelectorAll<HTMLButtonElement>("[data-lesson]").forEach((button) => {
       button.addEventListener("click", () => this.actions?.chooseLesson(Number(button.dataset.lesson)));
     });
+    this.lessonOverlay.querySelectorAll<HTMLButtonElement>("[data-practice]").forEach((button) => {
+      button.addEventListener("click", () => this.actions?.startPractice(button.dataset.practice as PieceType));
+    });
     this.lessonOverlay.querySelector<HTMLButtonElement>(".back-to-pieces")?.addEventListener("click", () => this.actions?.backToPieces());
   }
 
@@ -218,5 +261,28 @@ export class GameUI {
     const element = this.root.querySelector<T>(`#${id}`);
     if (!element) throw new Error(`Missing UI element #${id}`);
     return element;
+  }
+
+  private setLessonControls(lesson: Lesson): void {
+    this.byId<HTMLButtonElement>("replay-button").hidden = false;
+    this.byId<HTMLButtonElement>("hint-button").hidden = false;
+    this.byId<HTMLButtonElement>("reset-button").hidden = false;
+    this.byId<HTMLButtonElement>("check-button").hidden = lesson.objective !== "select-valid-squares";
+    this.byId<HTMLButtonElement>("understand-button").hidden = lesson.objective !== "tutorial";
+    this.byId<HTMLButtonElement>("practice-exit-button").hidden = true;
+  }
+
+  private setPracticeShell(enabled: boolean): void {
+    this.root.querySelector(".game-shell")?.classList.toggle("is-practice", enabled);
+    const menuButton = this.byId<HTMLButtonElement>("menu-button");
+    menuButton.textContent = enabled ? "←" : "☰";
+    menuButton.ariaLabel = enabled ? "Thoát luyện tập săn sao" : "Mở danh sách bài học";
+    if (!enabled) return;
+    this.byId<HTMLButtonElement>("replay-button").hidden = false;
+    this.byId<HTMLButtonElement>("hint-button").hidden = true;
+    this.byId<HTMLButtonElement>("reset-button").hidden = true;
+    this.byId<HTMLButtonElement>("check-button").hidden = true;
+    this.byId<HTMLButtonElement>("understand-button").hidden = true;
+    this.byId<HTMLButtonElement>("practice-exit-button").hidden = false;
   }
 }
