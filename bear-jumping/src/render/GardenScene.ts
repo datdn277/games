@@ -6,6 +6,7 @@ import { CELL_SIZE, TILE_HEIGHT } from './coordinates';
 import { Arrow3D } from './objects/Arrow3D';
 import { Bear3D } from './objects/Bear3D';
 import { Board3D } from './objects/Board3D';
+import { DirectionPicker3D } from './objects/DirectionPicker3D';
 import { Pond3D } from './objects/Pond3D';
 import { RabbitHouse3D } from './objects/RabbitHouse3D';
 
@@ -14,6 +15,7 @@ export class GardenScene {
   readonly board = new Board3D();
   readonly arrows = new Arrow3D();
   readonly bear = new Bear3D();
+  readonly directionPicker = new DirectionPicker3D();
   readonly ponds = new Pond3D(GARDEN_LEVEL.obstacles);
   readonly rabbitHouse = new RabbitHouse3D(GARDEN_LEVEL.goal);
 
@@ -30,6 +32,7 @@ export class GardenScene {
       this.ponds.group,
       this.rabbitHouse.group,
       this.bear.root,
+      this.directionPicker.group,
     );
   }
 
@@ -101,6 +104,7 @@ export class GardenScene {
   }
 
   setLevel(level: LevelDefinition): void {
+    this.directionPicker.hide();
     this.clearCommands();
     this.board.setMarkers(level.start, level.goal);
     this.ponds.setCells(level.obstacles);
@@ -138,6 +142,7 @@ export class GardenScene {
     this.board.update(delta);
     this.arrows.update(delta);
     this.ponds.update(delta);
+    this.directionPicker.update(delta);
     if (!animationController.isAnimating) this.bear.update(delta);
   }
 
@@ -147,6 +152,7 @@ export class GardenScene {
     this.bear.dispose();
     this.ponds.dispose();
     this.rabbitHouse.dispose();
+    this.directionPicker.dispose();
     this.ownedGeometries.forEach((geometry) => geometry.dispose());
     this.ownedMaterials.forEach((material) => material.dispose());
   }

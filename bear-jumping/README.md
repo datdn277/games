@@ -4,7 +4,7 @@ Browser game giáo dục 3D giúp trẻ hiểu mối quan hệ:
 
 **Mũi tên → một câu lệnh → một bước di chuyển → một chuỗi thuật toán.**
 
-Trẻ đặt trực tiếp các mũi tên lên bàn cờ 6×6. Khi bấm **Cho Gấu đi**, Gấu đọc lệnh tại ô hiện tại, quay người, đi một bước và tiếp tục cho đến khi tới nhà Thỏ hoặc gặp một trạng thái cần sửa.
+Trẻ có thể chơi theo hai cách bổ trợ nhau: chọn một trong bốn mũi tên 3D tỏa ra quanh Gấu để đi ngay từng bước, hoặc đặt trước cả thuật toán lên bàn cờ 6×6 rồi bấm **Cho Gấu đi**. Mỗi lựa chọn trực tiếp cũng được ghi lại thành lệnh trên ô vừa rời đi, nên trẻ nhìn thấy đường đi của mình dần trở thành một chuỗi thuật toán.
 
 Game có thể tạo khu vườn mới theo bốn kiểu bố trí:
 
@@ -21,6 +21,7 @@ Mức thử thách cho phép chọn **3, 6, 9 hoặc 12 hồ**. `LevelGenerator`
 - TypeScript + Vite
 - Vitest
 - HTML/CSS cho toolbar, chuỗi lệnh, status và modal
+- Web Audio API cho hiệu ứng âm thanh procedural, không cần file audio bên ngoài
 - Không dùng framework UI, physics engine hay thư viện animation ngoài
 
 ## Chạy project
@@ -52,6 +53,8 @@ Thêm `?debug=1` vào URL để hiện draw calls/triangles và API hỗ trợ p
 
 - Desktop: chọn rồi click một mũi tên, hoặc kéo mũi tên từ toolbar và thả lên ô 3D.
 - Mobile/tablet: chạm mũi tên rồi chạm ô trên bàn cờ.
+- Đi từng bước: chạm trực tiếp một trong bốn mũi tên 3D đang tỏa ra quanh Gấu. Hướng hợp lệ được ghi thành lệnh và Gấu đi ngay; bốn lựa chọn xuất hiện lại ở ô mới.
+- Nút loa cạnh tốc độ bật/tắt toàn bộ âm thanh. Audio chỉ được khởi tạo sau thao tác của người chơi để tuân thủ autoplay policy.
 - Bàn phím: `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight` chọn hướng; `Escape` bỏ chọn.
 - Công cụ **Xóa ô** xóa một lệnh. **Xóa tất cả mũi tên** hủy lượt chạy, đưa Gấu về đầu và dọn bàn cờ.
 - **Đưa Gấu về đầu** hủy animation hiện tại nhưng giữ nguyên các mũi tên.
@@ -60,6 +63,8 @@ Thêm `?debug=1` vào URL để hiện draw calls/triangles và API hỗ trợ p
 
 ```text
 src/
+├── audio/
+│   └── AudioController.ts
 ├── game/
 │   ├── types.ts
 │   ├── level.ts
@@ -79,6 +84,7 @@ src/
 │       ├── Board3D.ts
 │       ├── Bear3D.ts
 │       ├── Arrow3D.ts
+│       ├── DirectionPicker3D.ts
 │       ├── Pond3D.ts
 │       └── RabbitHouse3D.ts
 ├── ui/
@@ -97,7 +103,7 @@ tests/
 
 `LevelGenerator` cũng là simulation thuần dữ liệu. Nó random vị trí theo mode, loại trừ ô bắt đầu/đích, giới hạn số hồ và chạy BFS trước khi trả level. Nếu không tìm được bố trí sau giới hạn thử an toàn, generator tạo một hành lang bảo đảm kết nối rồi đặt hồ vào các ô còn lại.
 
-`GameController` mô phỏng toàn bộ lượt chạy trước, sau đó phát từng `MoveStep` sang lớp hiển thị. Một `runId` kết hợp với `AnimationController.cancelAll()` bảo đảm animation cũ không thể cập nhật state sau khi reset hoặc xóa toàn bộ.
+`GameController` mô phỏng toàn bộ lượt chạy trước, sau đó phát từng `MoveStep` sang lớp hiển thị. Với cách đi trực tiếp, controller kiểm tra biên/hồ bằng `GameSession`, ghi hướng vào ô hiện tại rồi mới yêu cầu `Bear3D` di chuyển một bước. Một `runId` kết hợp với `AnimationController.cancelAll()` bảo đảm animation cũ không thể cập nhật state sau khi reset hoặc xóa toàn bộ.
 
 Three.js chỉ dựng scene, highlight lệnh và phát animation. Luật đặt lệnh, chướng ngại và kết thúc không nằm trong mesh, raycaster hoặc render loop.
 
@@ -109,7 +115,11 @@ Mỗi tile có metadata:
 mesh.userData = { type: 'board-cell', row, col };
 ```
 
-`InputController` đổi pointer/drop coordinate sang normalized device coordinates, gọi `raycaster.setFromCamera()` và chỉ intersect danh sách 36 tile. Kết quả grid được gửi về `GameController` dưới dạng action.
+`InputController` đổi pointer/drop coordinate sang normalized device coordinates và gọi `raycaster.setFromCamera()`. Nó raycast danh sách bốn mesh của `DirectionPicker3D` trước, sau đó mới raycast 36 tile; không intersect toàn scene. Kết quả direction/grid được gửi về `GameController` dưới dạng action, còn raycaster không chứa luật chơi.
+
+### Mũi tên tỏa ra và âm thanh
+
+`DirectionPicker3D` dùng một `ExtrudeGeometry` chung và bốn material theo hướng. Khi `show(cell)` được gọi, các mũi tên nội suy từ tâm ô ra bốn phía bằng smoothstep, sau đó pulse nhẹ; hover và hướng sai chỉ thay emissive/transform sẵn có. `AudioController` tổng hợp các tiếng chọn, đặt lệnh, bước chân, cảnh báo và chiến thắng bằng oscillator + gain envelope, khởi tạo lười và giải phóng `AudioContext` khi dispose.
 
 ### Animation Gấu
 

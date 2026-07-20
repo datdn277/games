@@ -16,6 +16,7 @@ interface UIHandlers {
   onClear: () => void;
   onGenerateLevel: (options: LevelGenerationOptions) => void;
   onSpeedChanged: (durationMs: number) => void;
+  onSoundChanged: (enabled: boolean) => void;
   onReplay: () => void;
   onTryAgain: () => void;
 }
@@ -34,6 +35,7 @@ export class AppUIController {
   private readonly resetButton = this.element<HTMLButtonElement>('reset-button');
   private readonly clearButton = this.element<HTMLButtonElement>('clear-button');
   private readonly speedSelect = this.element<HTMLSelectElement>('speed-select');
+  private readonly soundButton = this.element<HTMLButtonElement>('sound-button');
   private readonly levelLayoutSelect = this.element<HTMLSelectElement>('level-layout-select');
   private readonly obstacleCountSelect = this.element<HTMLSelectElement>('obstacle-count-select');
   private readonly newLevelButton = this.element<HTMLButtonElement>('new-level-button');
@@ -63,6 +65,7 @@ export class AppUIController {
     this.speedSelect.addEventListener('change', () => {
       this.handlers?.onSpeedChanged(Number(this.speedSelect.value));
     });
+    this.soundButton.addEventListener('click', this.handleSoundToggle);
     this.newLevelButton.addEventListener('click', this.handleNewLevel);
     this.replayButton.addEventListener('click', () => this.handlers?.onReplay());
     this.tryAgainButton.addEventListener('click', () => this.handlers?.onTryAgain());
@@ -94,6 +97,14 @@ export class AppUIController {
     this.runButton.lastChild!.textContent = running ? ' Gấu đang đi…' : ' Cho Gấu đi';
     this.resetButton.textContent = running ? 'Dừng và về đầu' : 'Đưa Gấu về đầu';
   }
+
+  private readonly handleSoundToggle = (): void => {
+    const enabled = this.soundButton.getAttribute('aria-pressed') !== 'true';
+    this.soundButton.setAttribute('aria-pressed', String(enabled));
+    this.soundButton.setAttribute('aria-label', enabled ? 'Tắt âm thanh' : 'Bật âm thanh');
+    this.soundButton.title = enabled ? 'Tắt âm thanh' : 'Bật âm thanh';
+    this.handlers?.onSoundChanged(enabled);
+  };
 
   setLevelInfo(layout: LevelLayout, obstacleCount: number, goal: GridCell): void {
     const layoutLabel: Record<LevelLayout, string> = {
@@ -166,6 +177,7 @@ export class AppUIController {
 
   hideSuccess(): void {
     this.successModal.hidden = true;
+    this.confettiLayer.replaceChildren();
   }
 
   showWebGLFallback(): void {
@@ -245,6 +257,7 @@ export class AppUIController {
       button.removeEventListener('dragstart', this.handleDragStart);
     });
     this.newLevelButton.removeEventListener('click', this.handleNewLevel);
+    this.soundButton.removeEventListener('click', this.handleSoundToggle);
     window.removeEventListener('keydown', this.handleKeyDown);
   }
 }

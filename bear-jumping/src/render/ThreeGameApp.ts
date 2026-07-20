@@ -9,6 +9,7 @@ import { ResizeController } from './ResizeController';
 interface ThreeGameCallbacks {
   onCellSelected: (cell: GridCell) => void;
   onDirectionDropped: (cell: GridCell, direction: Direction) => void;
+  onDirectionChoice: (direction: Direction) => void;
 }
 
 export class ThreeGameApp {
@@ -64,9 +65,11 @@ export class ThreeGameApp {
       canvas,
       this.cameraController.camera,
       this.garden.board,
+      this.garden.directionPicker,
       {
         ...callbacks,
         onHover: (cell) => this.garden.board.setHover(cell),
+        onDirectionHover: (direction) => this.garden.directionPicker.setHover(direction),
       },
     );
 
@@ -103,6 +106,19 @@ export class ThreeGameApp {
       triangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
+    };
+  }
+
+  getDirectionChoiceScreenPosition(direction: Direction): { x: number; y: number } | null {
+    const choice = this.garden.directionPicker.choiceMeshes.find(
+      (mesh) => mesh.userData.direction === direction,
+    );
+    if (!choice || !this.garden.directionPicker.group.visible) return null;
+    const projected = choice.getWorldPosition(new THREE.Vector3()).project(this.cameraController.camera);
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: rect.left + (projected.x + 1) * rect.width / 2,
+      y: rect.top + (1 - projected.y) * rect.height / 2,
     };
   }
 

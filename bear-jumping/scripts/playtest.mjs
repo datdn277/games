@@ -3,6 +3,8 @@ import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const url = process.env.PLAYTEST_URL ?? 'http://127.0.0.1:4173/';
+const debugUrl = new URL(url);
+debugUrl.searchParams.set('debug', '1');
 const homeUrl = process.env.PLAYTEST_HOME_URL;
 const executablePath =
   process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -38,8 +40,9 @@ try {
       page.waitForURL(url, { waitUntil: 'networkidle' }),
       gameCard.click(),
     ]);
+    await page.goto(debugUrl.href, { waitUntil: 'networkidle' });
   } else {
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(debugUrl.href, { waitUntil: 'networkidle' });
   }
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
 
@@ -74,6 +77,49 @@ try {
   await page.locator('[data-tool="erase"]').click();
   await page.mouse.click(canvasBox.x + canvasBox.width * 0.5, canvasBox.y + canvasBox.height * 0.187);
   assert((await page.locator('#status-title').innerText()) === 'Đã xóa câu lệnh', 'Erase tool failed.');
+
+  await page.waitForTimeout(450);
+  await page.screenshot({ path: `${artifactDirectory}/10-direction-picker.png`, fullPage: false });
+  const rightChoice = await page.evaluate(() => window.__BEAR_GAME__?.directionChoiceScreenPosition('right'));
+  assert(rightChoice, 'The contextual direction picker is not visible at the bear.');
+  await page.mouse.click(rightChoice.x, rightChoice.y);
+  assert(
+    (await page.locator('#status-title').innerText()) === 'Ôi, phía trước là hồ!',
+    'The direct picker did not reject a step into the pond.',
+  );
+
+  const downChoice = await page.evaluate(() => window.__BEAR_GAME__?.directionChoiceScreenPosition('down'));
+  assert(downChoice, 'The down direction choice is unavailable.');
+  await page.mouse.click(downChoice.x, downChoice.y);
+  await page.waitForFunction(() => document.querySelector('#status-title')?.textContent === 'Đã đi một bước!');
+  assert(
+    (await page.locator('#status-message').innerText()).includes('hàng 2, cột 1'),
+    'Direct step did not move the bear to row 2, column 1.',
+  );
+  await page.screenshot({ path: `${artifactDirectory}/11-direct-step.png`, fullPage: false });
+
+  const soundButton = page.locator('#sound-button');
+  await soundButton.click();
+  assert((await soundButton.getAttribute('aria-pressed')) === 'false', 'Sound toggle did not mute audio.');
+  await soundButton.click();
+  assert((await soundButton.getAttribute('aria-pressed')) === 'true', 'Sound toggle did not restore audio.');
+  await page.locator('#debug-stats').evaluate((element) => {
+    element.style.display = 'none';
+  });
+
+  await page.evaluate(() => window.__BEAR_GAME__?.loadSamplePath());
+  await page.screenshot({ path: `${artifactDirectory}/02-sample-commands.png`, fullPage: false });
+  await page.locator('#speed-select').selectOption('430');
+  await page.locator('#run-button').click();
+  await page.waitForTimeout(320);
+  await page.screenshot({ path: `${artifactDirectory}/03-bear-walking.png`, fullPage: false });
+  await page.locator('#success-modal').waitFor({ state: 'visible', timeout: 8000 });
+  assert(
+    (await page.locator('#status-title').innerText()) === 'Đến nhà Thỏ rồi!',
+    'The sample command chain did not reach the rabbit house.',
+  );
+  await page.screenshot({ path: `${artifactDirectory}/06-success.png`, fullPage: false });
+  await page.locator('#try-again-button').click();
 
   await page.locator('.level-options summary').click();
   await page.locator('#level-layout-select').selectOption('random-all');
@@ -116,6 +162,8 @@ try {
   assert(mobile.toolbarBeforeCanvas, 'Mobile toolbar must appear before the playfield.');
   assert(mobile.touchTargetsLargeEnough, 'A mobile toolbar button is smaller than 44×44 px.');
   await page.screenshot({ path: `${artifactDirectory}/07-mobile-390x844.png`, fullPage: false });
+  await page.locator('#game-canvas').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${artifactDirectory}/08-mobile-board.png`, fullPage: false });
   assert(consoleProblems.length === 0, `Browser console problems:\n${consoleProblems.join('\n')}`);
 
   console.log(JSON.stringify({

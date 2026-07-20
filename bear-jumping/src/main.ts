@@ -2,6 +2,7 @@ import './styles.css';
 import { GameController } from './game/GameController';
 import { ThreeGameApp } from './render/ThreeGameApp';
 import { AppUIController } from './ui/AppUIController';
+import type { Direction } from './game/types';
 
 declare global {
   interface Window {
@@ -11,6 +12,7 @@ declare global {
       reset: () => void;
       clear: () => void;
       diagnostics: () => ReturnType<ThreeGameApp['getDiagnostics']>;
+      directionChoiceScreenPosition: (direction: Direction) => { x: number; y: number } | null;
     };
   }
 }
@@ -34,6 +36,7 @@ try {
       reset: () => controller?.resetBear(),
       clear: () => controller?.clearAll(),
       diagnostics: () => controller?.app.getDiagnostics() ?? { calls: 0, triangles: 0, geometries: 0, textures: 0 },
+      directionChoiceScreenPosition: (direction) => controller?.app.getDirectionChoiceScreenPosition(direction) ?? null,
     };
     window.setInterval(() => {
       const stats = controller?.app.getDiagnostics();

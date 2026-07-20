@@ -18,7 +18,7 @@
         <div>
           <p class="eyebrow">KHU VƯỜN THUẬT TOÁN</p>
           <h1>Gấu tìm đường đến nhà Thỏ</h1>
-          <p class="intro">Chọn một mũi tên, đặt vào ô rồi xem Gấu đọc từng câu lệnh!</p>
+          <p class="intro">Chọn hướng quanh Gấu để đi ngay, hoặc đặt trước cả chuỗi thuật toán!</p>
         </div>
         <div class="lesson-chip" aria-label="Công thức bài học">
           <span>Mũi tên</span><b>→</b><span>1 bước</span><b>→</b><span>Thuật toán</span>
@@ -34,7 +34,7 @@
           <div id="question-bubble" class="question-bubble" aria-hidden="true" hidden>?</div>
           <div class="stage-hint" aria-hidden="true">
             <span class="mouse-dot"></span>
-            Thả hoặc chạm vào một ô
+            Chạm hướng quanh Gấu hoặc thả vào ô
           </div>
           <div id="debug-stats" class="debug-stats" hidden></div>
         </section>
@@ -110,18 +110,23 @@
 
           <section id="status-panel" class="status-panel" data-tone="info" aria-live="polite">
             <span class="status-face" aria-hidden="true"><i></i><i></i><b></b></span>
-            <div><strong id="status-title">Sẵn sàng khám phá!</strong><p id="status-message">Chọn một mũi tên rồi đặt vào ô có Gấu.</p></div>
+            <div><strong id="status-title">Sẵn sàng khám phá!</strong><p id="status-message">Chạm một mũi tên quanh Gấu để đi từng bước.</p></div>
           </section>
 
           <section class="run-controls">
-            <label class="speed-control" for="speed-select">
-              <span>Tốc độ Gấu đi</span>
-              <select id="speed-select" aria-label="Chọn tốc độ Gấu đi">
-                <option value="1000">Chậm</option>
-                <option value="700" selected>Vừa</option>
-                <option value="430">Nhanh</option>
-              </select>
-            </label>
+            <div class="play-settings">
+              <label class="speed-control" for="speed-select">
+                <span>Tốc độ Gấu đi</span>
+                <select id="speed-select" aria-label="Chọn tốc độ Gấu đi">
+                  <option value="1000">Chậm</option>
+                  <option value="700" selected>Vừa</option>
+                  <option value="430">Nhanh</option>
+                </select>
+              </label>
+              <button id="sound-button" class="sound-button" type="button" aria-label="Tắt âm thanh" aria-pressed="true" title="Tắt âm thanh">
+                <span class="speaker-icon" aria-hidden="true"><i></i></span>
+              </button>
+            </div>
             <button id="run-button" class="primary-button" type="button">
               <span class="play-icon" aria-hidden="true"></span>Cho Gấu đi
             </button>
