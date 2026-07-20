@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Game giáo dục 3D giúp trẻ tạo chuỗi thuật toán bằng mũi tên điều hướng."
+    />
+    <meta name="theme-color" content="#e8f5d7" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%233c9e62'/%3E%3Ccircle cx='22' cy='22' r='8' fill='%23fff4d8'/%3E%3Ccircle cx='42' cy='22' r='8' fill='%23fff4d8'/%3E%3Cellipse cx='32' cy='39' rx='14' ry='16' fill='%23fff4d8'/%3E%3C/svg%3E" />
+    <title>Gấu tìm đường đến nhà Thỏ</title>
+    <script type="module" crossorigin src="./assets/index-lxZ0TpDQ.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/three-B4vQKQ4Z.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BVSaW1Y5.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="game-header">
+        <div class="title-mark" aria-hidden="true"><span></span><span></span><i></i></div>
+        <div>
+          <p class="eyebrow">KHU VƯỜN THUẬT TOÁN</p>
+          <h1>Gấu tìm đường đến nhà Thỏ</h1>
+          <p class="intro">Chọn một mũi tên, đặt vào ô rồi xem Gấu đọc từng câu lệnh!</p>
+        </div>
+        <div class="lesson-chip" aria-label="Công thức bài học">
+          <span>Mũi tên</span><b>→</b><span>1 bước</span><b>→</b><span>Thuật toán</span>
+        </div>
+      </header>
+
+      <div class="game-layout">
+        <section class="stage-card" aria-label="Khu vườn 3D">
+          <canvas id="game-canvas" aria-label="Bàn cờ khu vườn 3D gồm 6 hàng và 6 cột"></canvas>
+          <div id="webgl-fallback" class="webgl-fallback" role="alert" hidden>
+            Thiết bị này chưa hỗ trợ hiển thị game 3D. Hãy thử cập nhật trình duyệt.
+          </div>
+          <div id="question-bubble" class="question-bubble" aria-hidden="true" hidden>?</div>
+          <div class="stage-hint" aria-hidden="true">
+            <span class="mouse-dot"></span>
+            Thả hoặc chạm vào một ô
+          </div>
+          <div id="debug-stats" class="debug-stats" hidden></div>
+        </section>
+
+        <aside class="control-panel" aria-label="Bảng điều khiển">
+          <section class="panel-section tool-section">
+            <div class="section-heading">
+              <div>
+                <span class="step-number">1</span>
+                <h2>Chọn câu lệnh</h2>
+              </div>
+              <span id="selected-tool-label" class="selected-label">Chưa chọn</span>
+            </div>
+            <div class="direction-toolbar" role="toolbar" aria-label="Chọn hướng đi">
+              <button class="tool-button direction-button" type="button" data-tool="up" draggable="true" aria-label="Chọn mũi tên lên" aria-pressed="false">
+                <span class="css-arrow arrow-up" aria-hidden="true"></span><span>Lên</span>
+              </button>
+              <button class="tool-button direction-button" type="button" data-tool="down" draggable="true" aria-label="Chọn mũi tên xuống" aria-pressed="false">
+                <span class="css-arrow arrow-down" aria-hidden="true"></span><span>Xuống</span>
+              </button>
+              <button class="tool-button direction-button" type="button" data-tool="left" draggable="true" aria-label="Chọn mũi tên trái" aria-pressed="false">
+                <span class="css-arrow arrow-left" aria-hidden="true"></span><span>Trái</span>
+              </button>
+              <button class="tool-button direction-button" type="button" data-tool="right" draggable="true" aria-label="Chọn mũi tên phải" aria-pressed="false">
+                <span class="css-arrow arrow-right" aria-hidden="true"></span><span>Phải</span>
+              </button>
+              <button class="tool-button erase-button" type="button" data-tool="erase" aria-label="Chọn công cụ xóa một ô" aria-pressed="false">
+                <span class="eraser-icon" aria-hidden="true"></span><span>Xóa ô</span>
+              </button>
+            </div>
+            <p class="keyboard-tip">Mẹo: dùng các phím mũi tên để chọn nhanh, Esc để bỏ chọn.</p>
+          </section>
+
+          <section class="panel-section preview-section">
+            <div class="section-heading compact">
+              <div><span class="step-number">2</span><h2>Chuỗi lệnh Gấu sẽ đọc</h2></div>
+            </div>
+            <div id="command-preview" class="command-preview" aria-live="polite"></div>
+            <p id="preview-summary" class="preview-summary">Gấu đang chờ mũi tên đầu tiên.</p>
+          </section>
+
+          <details class="panel-section level-options">
+            <summary>
+              <span class="level-summary-icon" aria-hidden="true"></span>
+              <span><strong>Đổi khu vườn</strong><small id="level-summary">Bố trí cổ điển · 3 hồ · Đích H6, C6</small></span>
+              <i aria-hidden="true"></i>
+            </summary>
+            <div class="level-config-grid">
+              <label for="level-layout-select">
+                <span>Vị trí</span>
+                <select id="level-layout-select" aria-label="Chọn kiểu bố trí khu vườn">
+                  <option value="classic" selected>Cổ điển</option>
+                  <option value="random-obstacles">Random hồ</option>
+                  <option value="random-goal">Random nhà Thỏ</option>
+                  <option value="random-all">Random tất cả</option>
+                </select>
+              </label>
+              <label for="obstacle-count-select">
+                <span>Thử thách</span>
+                <select id="obstacle-count-select" aria-label="Chọn số lượng hồ nước">
+                  <option value="3" selected>Dễ · 3 hồ</option>
+                  <option value="6">Vừa · 6 hồ</option>
+                  <option value="9">Khó · 9 hồ</option>
+                  <option value="12">Siêu khó · 12 hồ</option>
+                </select>
+              </label>
+            </div>
+            <button id="new-level-button" class="new-level-button" type="button">
+              <span aria-hidden="true"></span>Tạo khu vườn mới
+            </button>
+            <p class="level-note">Mỗi khu vườn random luôn có ít nhất một đường đến nhà Thỏ.</p>
+          </details>
+
+          <section id="status-panel" class="status-panel" data-tone="info" aria-live="polite">
+            <span class="status-face" aria-hidden="true"><i></i><i></i><b></b></span>
+            <div><strong id="status-title">Sẵn sàng khám phá!</strong><p id="status-message">Chọn một mũi tên rồi đặt vào ô có Gấu.</p></div>
+          </section>
+
+          <section class="run-controls">
+            <label class="speed-control" for="speed-select">
+              <span>Tốc độ Gấu đi</span>
+              <select id="speed-select" aria-label="Chọn tốc độ Gấu đi">
+                <option value="1000">Chậm</option>
+                <option value="700" selected>Vừa</option>
+                <option value="430">Nhanh</option>
+              </select>
+            </label>
+            <button id="run-button" class="primary-button" type="button">
+              <span class="play-icon" aria-hidden="true"></span>Cho Gấu đi
+            </button>
+            <div class="secondary-actions">
+              <button id="reset-button" class="secondary-button" type="button">Đưa Gấu về đầu</button>
+              <button id="clear-button" class="secondary-button danger-soft" type="button">Xóa tất cả mũi tên</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <div id="success-modal" class="modal-backdrop" hidden>
+      <section class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="success-stars" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
+        <p class="eyebrow">HOÀN THÀNH THUẬT TOÁN</p>
+        <h2 id="success-title">Giỏi quá!</h2>
+        <p>Gấu đã đọc đúng từng mũi tên và đến được nhà Thỏ.</p>
+        <div class="modal-formula"><span>Mũi tên</span><b>→</b><span>Câu lệnh</span><b>→</b><span>Một bước</span></div>
+        <div class="modal-actions">
+          <button id="replay-button" class="primary-button" type="button">Xem Gấu đi lại</button>
+          <button id="try-again-button" class="secondary-button" type="button">Thử đường khác</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+  </body>
+</html>

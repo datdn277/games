@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Kho game học số</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%2330a7ff'/%3E%3Cpath d='M17 39h30v9H17zM20 20h9v18h-9zm15 6h9v12h-9z' fill='%23fff3c4'/%3E%3C/svg%3E" />
   <style>
     :root {
       --sky: #dff6ff;
@@ -41,6 +42,8 @@
       --route-2: #e9653f;
       --chess-1: #3a94c5;
       --chess-2: #163f5b;
+      --bear-1: #3c9e62;
+      --bear-2: #f79446;
       --hero-1: #ffffff;
       --hero-2: rgba(255, 255, 255, 0.72);
     }
@@ -247,6 +250,10 @@
       background: radial-gradient(circle, rgba(58, 148, 197, 0.5), rgba(242, 169, 0, 0));
     }
 
+    .game-card.bear-jumping::before {
+      background: radial-gradient(circle, rgba(60, 158, 98, 0.52), rgba(247, 148, 70, 0));
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -323,6 +330,11 @@
     .chess-guide .icon-wrap {
       background: linear-gradient(145deg, rgba(58, 148, 197, 0.28), rgba(242, 169, 0, 0.24));
       font-size: 36px;
+    }
+
+    .bear-jumping .icon-wrap {
+      background: linear-gradient(145deg, rgba(60, 158, 98, 0.3), rgba(247, 148, 70, 0.26));
+      font-size: 31px;
     }
 
     .matrix-icon {
@@ -421,6 +433,11 @@
     .chess-guide .badge {
       background: rgba(58, 148, 197, 0.2);
       color: #185879;
+    }
+
+    .bear-jumping .badge {
+      background: rgba(60, 158, 98, 0.2);
+      color: #286d43;
     }
 
     .game-card h2 {
@@ -527,6 +544,10 @@
 
     .chess-guide .cta {
       background: linear-gradient(180deg, var(--chess-1), var(--chess-2));
+    }
+
+    .bear-jumping .cta {
+      background: linear-gradient(180deg, var(--bear-1), var(--bear-2));
     }
 
     @media (max-width: 1080px) {
@@ -826,6 +847,24 @@
             <div class="pill-row" aria-hidden="true">
               <span class="mini-pill">Xe · Tượng · Mã</span>
               <span class="mini-pill">Bàn cờ 3D</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
+        <a class="game-card bear-jumping" href="./bear-jumping/static/index.html" aria-label="Mở game Gấu tìm đường đến nhà Thỏ">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true">🐻➜🐰</div>
+            <div class="badge">Xây chuỗi mũi tên</div>
+            <div>
+              <h2>Gấu tìm đường đến nhà Thỏ</h2>
+              <p>Đặt các mũi tên lên bàn cờ, tạo chuỗi câu lệnh rồi giúp Gấu đi qua khu vườn đến nhà Thỏ.</p>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <div class="meta" aria-label="Kỹ năng luyện tập">
+              <span class="pill">Lập trình từng bước</span>
+              <span class="pill">Bàn cờ 3D</span>
             </div>
             <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
           </div>

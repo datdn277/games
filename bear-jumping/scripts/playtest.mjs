@@ -1,0 +1,130 @@
+import { chromium } from 'playwright-core';
+import { mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
+const url = process.env.PLAYTEST_URL ?? 'http://127.0.0.1:4173/';
+const homeUrl = process.env.PLAYTEST_HOME_URL;
+const executablePath =
+  process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const artifactDirectory = fileURLToPath(new URL('../playtest-artifacts/', import.meta.url));
+await mkdir(artifactDirectory, { recursive: true });
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+const browser = await chromium.launch({ executablePath, headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const consoleProblems = [];
+page.on('console', (message) => {
+  if (message.type() === 'error' || message.type() === 'warning') {
+    consoleProblems.push(`${message.type()}: ${message.text()}`);
+  }
+});
+page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.message}`));
+
+try {
+  if (homeUrl) {
+    await page.goto(homeUrl, { waitUntil: 'networkidle' });
+    const gameCard = page.locator('a.game-card.bear-jumping');
+    await gameCard.waitFor({ state: 'visible' });
+    await gameCard.scrollIntoViewIfNeeded();
+    assert(
+      (await gameCard.getAttribute('href')) === './bear-jumping/static/index.html',
+      'Home menu does not point to the deployable bear-jumping entry.',
+    );
+    await page.screenshot({ path: `${artifactDirectory}/00-home-menu.png`, fullPage: false });
+    await Promise.all([
+      page.waitForURL(url, { waitUntil: 'networkidle' }),
+      gameCard.click(),
+    ]);
+  } else {
+    await page.goto(url, { waitUntil: 'networkidle' });
+  }
+  await page.locator('#game-canvas').waitFor({ state: 'visible' });
+
+  const desktop = await page.evaluate(() => {
+    const canvas = document.querySelector('#game-canvas');
+    const rect = canvas?.getBoundingClientRect();
+    return {
+      canvasCount: document.querySelectorAll('#game-canvas').length,
+      webgl: canvas instanceof HTMLCanvasElement && Boolean(canvas.getContext('webgl2')),
+      width: rect?.width ?? 0,
+      height: rect?.height ?? 0,
+      fallbackVisible: !document.querySelector('#webgl-fallback')?.hasAttribute('hidden'),
+    };
+  });
+  assert(desktop.canvasCount === 1, 'Canvas must appear exactly once.');
+  assert(desktop.webgl && !desktop.fallbackVisible, 'WebGLRenderer did not initialize.');
+  assert(desktop.width > 700 && desktop.height > 550, 'Desktop playfield is unexpectedly small.');
+  await page.screenshot({ path: `${artifactDirectory}/01-initial-desktop.png`, fullPage: false });
+
+  const canvasBox = await page.locator('#game-canvas').boundingBox();
+  assert(canvasBox, 'Canvas bounding box is unavailable.');
+  await page.dragAndDrop('[data-tool="down"]', '#game-canvas', {
+    targetPosition: { x: canvasBox.width * 0.5, y: canvasBox.height * 0.187 },
+  });
+  const dropMessage = await page.locator('#status-message').innerText();
+  assert(dropMessage.includes('hàng 1, cột 1'), 'Desktop drag/drop did not raycast to the start cell.');
+
+  await page.locator('[data-tool="right"]').click();
+  await page.mouse.click(canvasBox.x + canvasBox.width * 0.5, canvasBox.y + canvasBox.height * 0.187);
+  assert((await page.locator('#status-title').innerText()) === 'Đã đổi câu lệnh!', 'Command replacement failed.');
+
+  await page.locator('[data-tool="erase"]').click();
+  await page.mouse.click(canvasBox.x + canvasBox.width * 0.5, canvasBox.y + canvasBox.height * 0.187);
+  assert((await page.locator('#status-title').innerText()) === 'Đã xóa câu lệnh', 'Erase tool failed.');
+
+  await page.locator('.level-options summary').click();
+  await page.locator('#level-layout-select').selectOption('random-all');
+  await page.locator('#obstacle-count-select').selectOption('12');
+  await page.locator('#new-level-button').click();
+  const generatedSummary = await page.locator('#level-summary').innerText();
+  const generatedStatus = await page.locator('#status-message').innerText();
+  assert(generatedSummary.includes('Tất cả ngẫu nhiên'), 'Random-all mode was not applied.');
+  assert(generatedSummary.includes('12 hồ'), 'Challenge mode did not create twelve obstacles.');
+  assert(generatedStatus.includes('Luôn có ít nhất một đường đi'), 'Solvable-level feedback is missing.');
+  await page.screenshot({
+    path: `${artifactDirectory}/09-random-all-12-ponds.png`,
+    fullPage: false,
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobile = await page.evaluate(() => {
+    const canvas = document.querySelector('#game-canvas');
+    const stage = document.querySelector('.stage-card');
+    const toolbar = document.querySelector('.direction-toolbar');
+    const buttonRects = [...document.querySelectorAll('.tool-button')].map((button) => {
+      const rect = button.getBoundingClientRect();
+      return { width: rect.width, height: rect.height };
+    });
+    const canvasRect = canvas?.getBoundingClientRect();
+    return {
+      overflow: document.documentElement.scrollWidth > window.innerWidth,
+      canvasCount: document.querySelectorAll('#game-canvas').length,
+      squareCanvas: canvasRect ? Math.abs(canvasRect.width - canvasRect.height) < 1 : false,
+      toolbarBeforeCanvas:
+        (toolbar?.getBoundingClientRect().top ?? Infinity) <
+        (stage?.getBoundingClientRect().top ?? -Infinity),
+      touchTargetsLargeEnough: buttonRects.every(
+        ({ width, height }) => width >= 44 && height >= 44,
+      ),
+    };
+  });
+  assert(!mobile.overflow, 'Mobile layout has horizontal overflow.');
+  assert(mobile.canvasCount === 1 && mobile.squareCanvas, 'Mobile canvas is not a single square playfield.');
+  assert(mobile.toolbarBeforeCanvas, 'Mobile toolbar must appear before the playfield.');
+  assert(mobile.touchTargetsLargeEnough, 'A mobile toolbar button is smaller than 44×44 px.');
+  await page.screenshot({ path: `${artifactDirectory}/07-mobile-390x844.png`, fullPage: false });
+  assert(consoleProblems.length === 0, `Browser console problems:\n${consoleProblems.join('\n')}`);
+
+  console.log(JSON.stringify({
+    desktop,
+    dragDrop: dropMessage,
+    generatedLevel: generatedSummary,
+    mobile,
+    consoleProblems,
+  }, null, 2));
+} finally {
+  await browser.close();
+}
