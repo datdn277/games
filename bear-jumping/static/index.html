@@ -10,9 +10,9 @@
     <meta name="theme-color" content="#e8f5d7" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%233c9e62'/%3E%3Ccircle cx='22' cy='22' r='8' fill='%23fff4d8'/%3E%3Ccircle cx='42' cy='22' r='8' fill='%23fff4d8'/%3E%3Cellipse cx='32' cy='39' rx='14' ry='16' fill='%23fff4d8'/%3E%3C/svg%3E" />
     <title>Gấu tìm đường đến nhà Thỏ</title>
-    <script type="module" crossorigin src="./assets/index-DU9AJEe2.js"></script>
+    <script type="module" crossorigin src="./assets/index-F0XRqHlW.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/three-B4vQKQ4Z.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CMnUAJHR.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-C_7jLDZL.css">
   </head>
   <body>
     <main class="app-shell">
@@ -37,7 +37,7 @@
           <div id="question-bubble" class="question-bubble" aria-hidden="true" hidden>?</div>
           <div class="stage-hint" aria-hidden="true">
             <span class="mouse-dot"></span>
-            Chạm hướng quanh Gấu hoặc thả vào ô
+            <span id="stage-hint-text">Chạm hướng quanh Gấu hoặc thả vào ô</span>
           </div>
           <div id="debug-stats" class="debug-stats" hidden></div>
         </section>
@@ -117,6 +117,17 @@
           </section>
 
           <section class="run-controls">
+            <fieldset class="play-mode-control">
+              <legend>Cách chơi</legend>
+              <div class="play-mode-switch" role="group" aria-label="Chọn cách chơi">
+                <button class="play-mode-button" type="button" data-play-mode="guided-step" aria-pressed="true">
+                  <strong>Thử từng bước</strong><small>Có 4 hướng quanh Gấu</small>
+                </button>
+                <button class="play-mode-button" type="button" data-play-mode="plan-first" aria-pressed="false">
+                  <strong>Lập trình trước</strong><small>Xếp xong rồi cho Gấu đi</small>
+                </button>
+              </div>
+            </fieldset>
             <div class="play-settings">
               <label class="speed-control" for="speed-select">
                 <span>Tốc độ Gấu đi</span>

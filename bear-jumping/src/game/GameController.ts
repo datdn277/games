@@ -6,7 +6,7 @@ import { GARDEN_LEVEL } from './level';
 import { LevelGenerator } from './LevelGenerator';
 import { PathSimulator } from './PathSimulator';
 import { ThreeGameApp } from '../render/ThreeGameApp';
-import { AppUIController, type Tool } from '../ui/AppUIController';
+import { AppUIController, type PlayMode, type Tool } from '../ui/AppUIController';
 
 const OUTCOME_MESSAGES: Record<
   Exclude<RunOutcome['kind'], 'success' | 'missing-command'>,
@@ -34,6 +34,7 @@ export class GameController {
   private readonly audio = new AudioController();
 
   private selectedTool: Tool = null;
+  private playMode: PlayMode = 'guided-step';
   private bearCell: GridCell = cloneCell(GARDEN_LEVEL.start);
   private running = false;
   private runId = 0;
@@ -59,6 +60,7 @@ export class GameController {
       onGenerateLevel: (options) => this.generateLevel(options),
       onSpeedChanged: (durationMs) => (this.stepDurationMs = durationMs),
       onSoundChanged: (enabled) => this.audio.setEnabled(enabled),
+      onPlayModeChanged: (mode) => this.setPlayMode(mode),
       onReplay: () => {
         this.ui.hideSuccess();
         void this.run();
@@ -70,8 +72,9 @@ export class GameController {
       },
     });
     this.ui.setLevelInfo('classic', GARDEN_LEVEL.obstacles.length, GARDEN_LEVEL.goal);
+    this.ui.setPlayMode(this.playMode);
     this.updatePreview();
-    this.app.garden.directionPicker.show(this.bearCell);
+    this.syncDirectionPicker();
     this.ui.setStatus('Chọn hướng cho Gấu!', 'Chạm một trong bốn mũi tên đang tỏa ra quanh Gấu để đi từng bước.', 'info');
   }
 
@@ -104,7 +107,6 @@ export class GameController {
 
     this.app.garden.setCommand(cell, direction);
     this.audio.playPlace();
-    if (sameCell(cell, this.bearCell)) this.app.garden.directionPicker.hide();
     this.ui.showQuestion(false);
     this.ui.setStatus(
       result.replaced ? 'Đã đổi câu lệnh!' : 'Đã đặt một câu lệnh!',
@@ -121,7 +123,7 @@ export class GameController {
     if (removed) {
       this.app.garden.removeCommand(cell);
       this.audio.playSelect();
-      if (sameCell(cell, this.bearCell)) this.app.garden.directionPicker.show(this.bearCell);
+      if (sameCell(cell, this.bearCell)) this.syncDirectionPicker();
       this.ui.setStatus('Đã xóa câu lệnh', `Ô hàng ${cell.row + 1}, cột ${cell.col + 1} đang trống.`, 'info');
       this.updatePreview();
     } else {
@@ -199,7 +201,7 @@ export class GameController {
     if (currentRunId === this.runId) {
       this.setRunning(false);
       this.bearCell = cloneCell(outcome.terminalCell);
-      this.app.garden.directionPicker.show(this.bearCell);
+      this.syncDirectionPicker();
     }
   }
 
@@ -207,7 +209,7 @@ export class GameController {
     this.cancelRun();
     this.app.garden.bear.setCell(this.session.level.start);
     this.bearCell = cloneCell(this.session.level.start);
-    this.app.garden.directionPicker.show(this.bearCell);
+    this.syncDirectionPicker();
     this.app.garden.clearFeedback();
     this.ui.showQuestion(false);
     this.ui.hideSuccess();
@@ -221,7 +223,7 @@ export class GameController {
     this.app.garden.clearCommands();
     this.app.garden.bear.setCell(this.session.level.start);
     this.bearCell = cloneCell(this.session.level.start);
-    this.app.garden.directionPicker.show(this.bearCell);
+    this.syncDirectionPicker();
     this.ui.showQuestion(false);
     this.ui.hideSuccess();
     this.ui.setStatus('Khu vườn đã sạch!', 'Hãy tạo một chuỗi mũi tên mới cho Gấu.', 'info');
@@ -241,7 +243,7 @@ export class GameController {
     this.session = new GameSession(level);
     this.app.garden.setLevel(level);
     this.bearCell = cloneCell(level.start);
-    this.app.garden.directionPicker.show(this.bearCell);
+    this.syncDirectionPicker();
     this.audio.playNewLevel();
     this.ui.showQuestion(false);
     this.ui.hideSuccess();
@@ -265,7 +267,7 @@ export class GameController {
   }
 
   private async handleDirectionChoice(direction: Direction): Promise<void> {
-    if (this.running) return;
+    if (this.running || this.playMode !== 'guided-step') return;
     this.audio.playSelect();
     const from = cloneCell(this.bearCell);
     const delta = DIRECTION_DELTAS[direction];
@@ -322,7 +324,7 @@ export class GameController {
     }
 
     this.setRunning(false);
-    this.app.garden.directionPicker.show(this.bearCell);
+    this.syncDirectionPicker();
     this.ui.setStatus(
       'Đã đi một bước!',
       `Gấu đang ở hàng ${to.row + 1}, cột ${to.col + 1}. Chọn mũi tên tiếp theo nhé!`,
@@ -335,6 +337,46 @@ export class GameController {
     this.app.garden.setProblem(this.bearCell);
     this.audio.playError();
     this.ui.setStatus(title, message, 'warning');
+  }
+
+  private setPlayMode(mode: PlayMode): void {
+    if (this.running || mode === this.playMode) return;
+    this.playMode = mode;
+    this.ui.setPlayMode(mode);
+    this.app.garden.bear.setCell(this.session.level.start);
+    this.bearCell = cloneCell(this.session.level.start);
+    this.app.garden.clearFeedback();
+    this.ui.showQuestion(false);
+    this.ui.hideSuccess();
+    this.ui.highlightPreviewStep(-1);
+    this.audio.playSelect();
+    this.syncDirectionPicker();
+
+    if (mode === 'guided-step') {
+      this.ui.setStatus(
+        'Chế độ: Thử từng bước',
+        'Chạm một trong bốn mũi tên quanh Gấu để thử ngay từng hướng.',
+        'info',
+      );
+    } else {
+      this.ui.setStatus(
+        'Chế độ: Lập trình trước',
+        'Hãy suy nghĩ, đặt các mũi tên lên bàn cờ rồi bấm “Cho Gấu đi”.',
+        'info',
+      );
+    }
+  }
+
+  private syncDirectionPicker(): void {
+    if (
+      this.playMode === 'guided-step' &&
+      !this.running &&
+      !sameCell(this.bearCell, this.session.level.goal)
+    ) {
+      this.app.garden.directionPicker.show(this.bearCell);
+    } else {
+      this.app.garden.directionPicker.hide();
+    }
   }
 
   private updatePreview(): void {

@@ -103,6 +103,27 @@ try {
   assert((await soundButton.getAttribute('aria-pressed')) === 'false', 'Sound toggle did not mute audio.');
   await soundButton.click();
   assert((await soundButton.getAttribute('aria-pressed')) === 'true', 'Sound toggle did not restore audio.');
+
+  const planModeButton = page.locator('[data-play-mode="plan-first"]');
+  const guidedModeButton = page.locator('[data-play-mode="guided-step"]');
+  await planModeButton.click();
+  assert((await planModeButton.getAttribute('aria-pressed')) === 'true', 'Plan-first mode was not selected.');
+  assert((await guidedModeButton.getAttribute('aria-pressed')) === 'false', 'Guided mode remained selected.');
+  assert(
+    await page.evaluate(() => window.__BEAR_GAME__?.directionChoiceScreenPosition('down') === null),
+    'Direction choices must be hidden in plan-first mode.',
+  );
+  assert(
+    (await page.locator('#status-title').innerText()) === 'Chế độ: Lập trình trước',
+    'Plan-first mode did not explain its workflow.',
+  );
+  await page.locator('#clear-button').click();
+  assert(
+    (await planModeButton.getAttribute('aria-pressed')) === 'true' &&
+      (await guidedModeButton.getAttribute('aria-pressed')) === 'false',
+    'Clearing commands unexpectedly changed the selected play mode.',
+  );
+  await page.screenshot({ path: `${artifactDirectory}/12-plan-first-mode.png`, fullPage: false });
   await page.locator('#debug-stats').evaluate((element) => {
     element.style.display = 'none';
   });
@@ -112,6 +133,7 @@ try {
   await page.locator('#speed-select').selectOption('430');
   await page.locator('#run-button').click();
   await page.waitForTimeout(320);
+  assert(await planModeButton.isDisabled(), 'Mode switch must be disabled while the bear is running.');
   await page.screenshot({ path: `${artifactDirectory}/03-bear-walking.png`, fullPage: false });
   await page.locator('#success-modal').waitFor({ state: 'visible', timeout: 8000 });
   assert(
@@ -155,15 +177,33 @@ try {
       touchTargetsLargeEnough: buttonRects.every(
         ({ width, height }) => width >= 44 && height >= 44,
       ),
+      modeTargetsLargeEnough: [...document.querySelectorAll('.play-mode-button')].every((button) => {
+        const rect = button.getBoundingClientRect();
+        return rect.width >= 44 && rect.height >= 44;
+      }),
     };
   });
   assert(!mobile.overflow, 'Mobile layout has horizontal overflow.');
   assert(mobile.canvasCount === 1 && mobile.squareCanvas, 'Mobile canvas is not a single square playfield.');
   assert(mobile.toolbarBeforeCanvas, 'Mobile toolbar must appear before the playfield.');
   assert(mobile.touchTargetsLargeEnough, 'A mobile toolbar button is smaller than 44×44 px.');
+  assert(mobile.modeTargetsLargeEnough, 'A mobile mode button is smaller than 44×44 px.');
   await page.screenshot({ path: `${artifactDirectory}/07-mobile-390x844.png`, fullPage: false });
   await page.locator('#game-canvas').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: `${artifactDirectory}/08-mobile-board.png`, fullPage: false });
+  await page.screenshot({ path: `${artifactDirectory}/13-plan-first-mobile-board.png`, fullPage: false });
+  assert(
+    await page.evaluate(() => window.__BEAR_GAME__?.directionChoiceScreenPosition('down') === null),
+    'Plan-first mode unexpectedly rendered contextual arrows on mobile.',
+  );
+  await guidedModeButton.click();
+  await page.waitForTimeout(450);
+  assert((await guidedModeButton.getAttribute('aria-pressed')) === 'true', 'Guided mode was not restored.');
+  assert(
+    await page.evaluate(() => window.__BEAR_GAME__?.directionChoiceScreenPosition('down') !== null),
+    'Guided mode did not restore contextual arrows on mobile.',
+  );
+  await page.locator('#game-canvas').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${artifactDirectory}/14-guided-mobile-board.png`, fullPage: false });
   assert(consoleProblems.length === 0, `Browser console problems:\n${consoleProblems.join('\n')}`);
 
   console.log(JSON.stringify({

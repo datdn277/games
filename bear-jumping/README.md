@@ -4,7 +4,12 @@ Browser game giáo dục 3D giúp trẻ hiểu mối quan hệ:
 
 **Mũi tên → một câu lệnh → một bước di chuyển → một chuỗi thuật toán.**
 
-Trẻ có thể chơi theo hai cách bổ trợ nhau: chọn một trong bốn mũi tên 3D tỏa ra quanh Gấu để đi ngay từng bước, hoặc đặt trước cả thuật toán lên bàn cờ 6×6 rồi bấm **Cho Gấu đi**. Mỗi lựa chọn trực tiếp cũng được ghi lại thành lệnh trên ô vừa rời đi, nên trẻ nhìn thấy đường đi của mình dần trở thành một chuỗi thuật toán.
+Trẻ có thể chọn hai chế độ bổ trợ nhau bằng công tắc **Cách chơi**:
+
+- **Thử từng bước**: chọn một trong bốn mũi tên 3D tỏa ra quanh Gấu để đi ngay. Mỗi lựa chọn được ghi lại thành lệnh trên ô vừa rời đi.
+- **Lập trình trước**: không hiện mũi tên quanh Gấu. Trẻ suy nghĩ, đặt trước cả thuật toán lên bàn cờ 6×6 rồi bấm **Cho Gấu đi**.
+
+Đổi chế độ sẽ đưa Gấu về ô bắt đầu nhưng giữ lại các lệnh đã đặt.
 
 Game có thể tạo khu vườn mới theo bốn kiểu bố trí:
 
@@ -53,7 +58,8 @@ Thêm `?debug=1` vào URL để hiện draw calls/triangles và API hỗ trợ p
 
 - Desktop: chọn rồi click một mũi tên, hoặc kéo mũi tên từ toolbar và thả lên ô 3D.
 - Mobile/tablet: chạm mũi tên rồi chạm ô trên bàn cờ.
-- Đi từng bước: chạm trực tiếp một trong bốn mũi tên 3D đang tỏa ra quanh Gấu. Hướng hợp lệ được ghi thành lệnh và Gấu đi ngay; bốn lựa chọn xuất hiện lại ở ô mới.
+- Chọn **Thử từng bước** để chạm trực tiếp một trong bốn mũi tên 3D đang tỏa ra quanh Gấu. Hướng hợp lệ được ghi thành lệnh và Gấu đi ngay; bốn lựa chọn xuất hiện lại ở ô mới.
+- Chọn **Lập trình trước** để ẩn các lựa chọn quanh Gấu, đặt toàn bộ mũi tên bằng toolbar rồi mới chạy chuỗi.
 - Nút loa cạnh tốc độ bật/tắt toàn bộ âm thanh. Audio chỉ được khởi tạo sau thao tác của người chơi để tuân thủ autoplay policy.
 - Bàn phím: `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight` chọn hướng; `Escape` bỏ chọn.
 - Công cụ **Xóa ô** xóa một lệnh. **Xóa tất cả mũi tên** hủy lượt chạy, đưa Gấu về đầu và dọn bàn cờ.

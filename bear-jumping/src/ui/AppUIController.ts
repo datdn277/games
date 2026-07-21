@@ -8,6 +8,7 @@ import type {
 import { DIRECTIONS } from '../game/types';
 
 export type Tool = Direction | 'erase' | null;
+export type PlayMode = 'guided-step' | 'plan-first';
 
 interface UIHandlers {
   onToolSelected: (tool: Tool) => void;
@@ -17,6 +18,7 @@ interface UIHandlers {
   onGenerateLevel: (options: LevelGenerationOptions) => void;
   onSpeedChanged: (durationMs: number) => void;
   onSoundChanged: (enabled: boolean) => void;
+  onPlayModeChanged: (mode: PlayMode) => void;
   onReplay: () => void;
   onTryAgain: () => void;
 }
@@ -36,6 +38,10 @@ export class AppUIController {
   private readonly clearButton = this.element<HTMLButtonElement>('clear-button');
   private readonly speedSelect = this.element<HTMLSelectElement>('speed-select');
   private readonly soundButton = this.element<HTMLButtonElement>('sound-button');
+  private readonly playModeButtons = [
+    ...document.querySelectorAll<HTMLButtonElement>('[data-play-mode]'),
+  ];
+  private readonly stageHintText = this.element<HTMLElement>('stage-hint-text');
   private readonly levelLayoutSelect = this.element<HTMLSelectElement>('level-layout-select');
   private readonly obstacleCountSelect = this.element<HTMLSelectElement>('obstacle-count-select');
   private readonly newLevelButton = this.element<HTMLButtonElement>('new-level-button');
@@ -66,6 +72,7 @@ export class AppUIController {
       this.handlers?.onSpeedChanged(Number(this.speedSelect.value));
     });
     this.soundButton.addEventListener('click', this.handleSoundToggle);
+    this.playModeButtons.forEach((button) => button.addEventListener('click', this.handlePlayModeClick));
     this.newLevelButton.addEventListener('click', this.handleNewLevel);
     this.replayButton.addEventListener('click', () => this.handlers?.onReplay());
     this.tryAgainButton.addEventListener('click', () => this.handlers?.onTryAgain());
@@ -93,9 +100,19 @@ export class AppUIController {
     this.speedSelect.disabled = running;
     this.levelLayoutSelect.disabled = running;
     this.obstacleCountSelect.disabled = running;
+    this.playModeButtons.forEach((button) => (button.disabled = running));
     this.runButton.classList.toggle('is-running', running);
     this.runButton.lastChild!.textContent = running ? ' Gấu đang đi…' : ' Cho Gấu đi';
     this.resetButton.textContent = running ? 'Dừng và về đầu' : 'Đưa Gấu về đầu';
+  }
+
+  setPlayMode(mode: PlayMode): void {
+    this.playModeButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.playMode === mode));
+    });
+    this.stageHintText.textContent = mode === 'guided-step'
+      ? 'Chạm hướng quanh Gấu hoặc thả vào ô'
+      : 'Chọn lệnh rồi đặt vào từng ô';
   }
 
   private readonly handleSoundToggle = (): void => {
@@ -104,6 +121,14 @@ export class AppUIController {
     this.soundButton.setAttribute('aria-label', enabled ? 'Tắt âm thanh' : 'Bật âm thanh');
     this.soundButton.title = enabled ? 'Tắt âm thanh' : 'Bật âm thanh';
     this.handlers?.onSoundChanged(enabled);
+  };
+
+  private readonly handlePlayModeClick = (event: Event): void => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const mode = button.dataset.playMode;
+    if (mode === 'guided-step' || mode === 'plan-first') {
+      this.handlers?.onPlayModeChanged(mode);
+    }
   };
 
   setLevelInfo(layout: LevelLayout, obstacleCount: number, goal: GridCell): void {
@@ -185,6 +210,7 @@ export class AppUIController {
     fallback.hidden = false;
     this.runButton.disabled = true;
     this.toolButtons.forEach((button) => (button.disabled = true));
+    this.playModeButtons.forEach((button) => (button.disabled = true));
   }
 
   updateDebugStats(text: string): void {
@@ -258,6 +284,7 @@ export class AppUIController {
     });
     this.newLevelButton.removeEventListener('click', this.handleNewLevel);
     this.soundButton.removeEventListener('click', this.handleSoundToggle);
+    this.playModeButtons.forEach((button) => button.removeEventListener('click', this.handlePlayModeClick));
     window.removeEventListener('keydown', this.handleKeyDown);
   }
 }
