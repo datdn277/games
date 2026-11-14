@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3ff">
+  <meta name="description" content="Cùng gấu Mimo đếm trên bàn tay 3D và học cộng, trừ trong phạm vi 10.">
+  <title>Bàn tay Toán học kỳ diệu</title>
+  <link rel="icon" href="./src/hand.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="../../index.html" id="collection-link">
+        <span class="brand-mark" aria-hidden="true"><img src="./src/hand.svg" alt=""></span>
+        <span>Kho trò chơi</span>
+      </a>
+      <button class="nav-home icon-button" data-action="home" hidden></button>
+      <div id="hud" class="hud" hidden></div>
+      <div class="top-actions">
+        <span class="star-counter" id="star-counter" aria-label="0 sao"><span aria-hidden="true">★</span><strong>0</strong></span>
+        <button class="icon-button" id="sound-button" data-action="sound" aria-pressed="true"></button>
+      </div>
+    </header>
+    <main class="layout" data-screen="menu">
+      <section class="intro" id="intro" aria-labelledby="title">
+        <div class="intro-kicker"><span aria-hidden="true">✦</span> Học viện của Mimo</div>
+        <h1 id="title" tabindex="-1">Bàn tay<br> <span>Toán học</span><br> kỳ diệu<span class="title-star" aria-hidden="true">✦</span></h1>
+        <p>Mimo có một bàn tay biết đếm! Cùng chạm từng ngón để học cộng và trừ trong phạm vi 10.</p>
+        <div class="intro-actions">
+          <button class="button primary start-button" data-action="quick-start"><span class="button-icon" data-icon="play"></span>Bắt đầu</button>
+          <button class="button secondary" data-action="levels"><span class="button-icon" data-icon="grid"></span>Chọn màn chơi</button>
+        </div>
+      </section>
+
+      <section class="scene-frame" id="scene-frame" aria-label="Lớp học 3D của Mimo">
+        <canvas id="stage" aria-hidden="true"></canvas>
+        <div class="scene-unavailable" id="scene-unavailable" hidden>
+          <span aria-hidden="true">✋</span>
+          <p id="scene-message">Đang mở lớp học của Mimo…</p>
+        </div>
+      </section>
+
+      <section class="level-select" id="level-select" aria-labelledby="level-title" hidden>
+        <div class="selection-heading">
+          <h1 id="level-title" tabindex="-1">Chọn màn chơi</h1>
+          <p>Chọn cách chơi, rồi chọn nơi bé muốn khám phá.</p>
+        </div>
+        <fieldset class="mode-picker" id="mode-picker"><legend>Cách chơi</legend></fieldset>
+        <div class="level-list" id="level-list"></div>
+      </section>
+
+      <section class="lesson-question card" id="lesson-question" hidden aria-label="Phép tính">
+        <div class="lesson-label" id="lesson-label"></div>
+        <div class="question-line">
+          <h1 class="equation" id="equation" tabindex="-1"></h1>
+          <div class="thought" id="thought" hidden><span>Nhớ số</span><strong></strong></div>
+        </div>
+      </section>
+
+      <section class="lesson-actions card" id="lesson-actions" hidden aria-label="Hướng dẫn và trả lời">
+        <div class="instruction">
+          <span class="mimo-medallion" aria-hidden="true">🐻</span>
+          <div>
+            <h2 id="instruction-title" tabindex="-1"></h2>
+            <p id="instruction-text"></p>
+          </div>
+        </div>
+        <div id="phase-controls" class="phase-controls"></div>
+        <div class="support">
+          <button class="support-button" data-action="replay" id="replay-button"><span class="button-icon" data-icon="speaker"></span>Nghe lại</button>
+          <button class="support-button" data-action="help" id="help-button"><span class="button-icon" data-icon="help"></span>Gợi ý</button>
+          <button class="support-button" data-action="line" id="line-button" aria-pressed="true"><span class="button-icon" data-icon="line"></span>Đường số</button>
+        </div>
+      </section>
+
+      <section class="result card" id="result" aria-labelledby="result-title" hidden></section>
+      <span class="sr-only" id="announcement" aria-live="polite" aria-atomic="true"></span>
+    </main>
+    <noscript>Hãy bật JavaScript để chơi cùng Mimo.</noscript>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
