@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="icon" type="image/svg+xml" href="./mimo.svg">
+    <meta name="theme-color" content="#fff8ed">
+    <meta name="description" content="Cùng gấu Mimo tìm đồ chơi, nhận biết bên trái và bên phải trong trò chơi 3D dành cho bé 5–6 tuổi.">
+    <title>Bé ơi, đồ vật ở đâu? · Little Explorer 3D</title>
+    <script type="module" crossorigin src="./assets/index-DP0XOAbU.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/three-C7CGJ_1z.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BOAObAfI.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" id="brand" href="./" aria-label="Về menu Little Explorer 3D">
+            <span class="brand-mark" aria-hidden="true"><i></i></span>
+            <span>Little Explorer <b>3D</b></span>
+          </a>
+          <div class="top-actions">
+            <a class="catalog-link" id="catalog-link" href="../../index.html">Kho trò chơi</a>
+            <button class="icon-button" id="sound" type="button" aria-label="Âm thanh" aria-pressed="true"></button>
+          </div>
+        </div>
+      </header>
+
+      <main class="shell" id="main">
+        <section class="intro" aria-labelledby="game-title">
+          <span class="age-label">5–6 tuổi <i></i> Trái &amp; phải</span>
+          <h1 id="game-title" tabindex="-1">Bé ơi,<br>đồ vật <span>ở đâu?</span></h1>
+          <p>Cùng gấu Mimo tìm đồ chơi và làm quen với bên trái, bên phải!</p>
+          <div class="intro-actions">
+            <button class="button primary" id="start" type="button">Bắt đầu</button>
+            <button class="button quiet" id="choose-level" type="button">Chọn màn</button>
+          </div>
+        </section>
+
+        <section class="gamebar" aria-label="Tiến độ màn chơi" hidden>
+          <button class="icon-button game-home" id="game-home" type="button" aria-label="Về menu"></button>
+          <div class="gamebar-progress">
+            <div class="mission-heading"><h1 id="level-title" tabindex="-1"></h1><span id="mission-counter"></span></div>
+            <div class="mission-dots" id="mission-dots" aria-hidden="true"></div>
+          </div>
+          <div class="star-counter"><span id="star-value">0</span></div>
+        </section>
+
+        <div class="stage-frame" id="stage-frame">
+          <div class="stage" id="stage">
+            <canvas id="world" aria-hidden="true"></canvas>
+            <div class="stage-label" id="stage-label">Phòng đồ chơi</div>
+            <span class="stage-mimo" id="stage-mimo">Mimo</span>
+            <div class="stage-cues" id="stage-cues"></div>
+            <div class="stage-fallback" id="stage-fallback" hidden></div>
+          </div>
+        </div>
+
+        <section class="question-card" aria-label="Yêu cầu của Mimo" hidden>
+          <button class="icon-button replay" id="replay" type="button" aria-label="Nghe lại yêu cầu"></button>
+          <div class="question-copy">
+            <div class="question-tag" id="question-tag"></div>
+            <p id="prompt" role="status" aria-live="polite" aria-atomic="true"></p>
+          </div>
+          <button class="icon-button hint-button" id="hint" type="button" aria-label="Gợi ý" aria-pressed="false"></button>
+        </section>
+        <p class="sr-only" id="audio-status" role="status"></p>
+
+        <section class="journey" id="journey" aria-labelledby="journey-title">
+          <div class="journey-heading">
+            <h2 id="journey-title" tabindex="-1">Hành trình của bé</h2>
+            <button class="button collection-link" id="collection" type="button">Nhãn dán</button>
+          </div>
+          <div class="level-grid" id="level-grid"></div>
+        </section>
+
+        <section class="finish" id="finish" aria-labelledby="finish-title" hidden>
+          <div class="finish-sticker" id="finish-sticker" aria-hidden="true"></div>
+          <div class="finish-copy">
+            <h1 id="finish-title" tabindex="-1">Giỏi lắm!</h1>
+            <p id="finish-message"></p>
+            <div class="finish-stars" id="finish-stars"></div>
+          </div>
+          <div class="finish-actions">
+            <button class="button primary" id="next-level" type="button">Màn tiếp theo</button>
+            <button class="button secondary" id="retry-level" type="button">Chơi lại</button>
+            <button class="button quiet" id="finish-home" type="button">Về menu</button>
+          </div>
+        </section>
+      </main>
+
+      <dialog class="collection-dialog" id="collection-dialog" aria-labelledby="collection-title">
+        <div class="dialog-heading">
+          <h2 id="collection-title">Nhãn dán của bé</h2>
+          <button class="icon-button" id="close-collection" type="button" aria-label="Đóng bộ sưu tập"></button>
+        </div>
+        <div class="sticker-grid" id="sticker-grid"></div>
+      </dialog>
+    </div>
+  </body>
+</html>

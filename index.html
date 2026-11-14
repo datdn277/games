@@ -254,6 +254,29 @@
       background: radial-gradient(circle, rgba(60, 158, 98, 0.52), rgba(247, 148, 70, 0));
     }
 
+    .game-card.left-right::before {
+      background: radial-gradient(circle, rgba(178, 151, 238, 0.55), rgba(255, 157, 122, 0));
+    }
+
+    .left-right .icon-wrap {
+      background: linear-gradient(145deg, #fff0c6, #f3e5ff);
+    }
+
+    .left-right .icon-wrap img {
+      display: block;
+      width: 62px;
+      height: 62px;
+    }
+
+    .left-right .badge {
+      background: #f0e4ff;
+      color: #65429c;
+    }
+
+    .left-right .cta {
+      background: linear-gradient(180deg, #af8be7, #8f68d0);
+    }
+
     .card-top {
       display: grid;
       gap: 16px;
@@ -614,6 +637,22 @@
       </section>
 
       <section class="grid" aria-label="Danh sách trò chơi">
+        <a class="game-card left-right" href="./left-right/static/index.html" aria-label="Mở game Bé ơi, đồ vật ở đâu?">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true"><img src="./left-right/static/mimo.svg" alt="" width="62" height="62"></div>
+            <div class="badge">Nhận biết trái và phải</div>
+            <h2>Bé ơi, đồ vật ở đâu?</h2>
+            <p>Cùng gấu Mimo tìm đồ chơi ở bên trái và bên phải qua ba màn khám phá 3D.</p>
+          </div>
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">5–6 tuổi</span>
+              <span class="mini-pill">Đồ chơi 3D</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
         <a class="game-card stairs" href="./stairs/index.html" aria-label="Mở game Bậc thang số">
           <div class="card-top">
             <div class="icon-wrap" aria-hidden="true">🪜</div>

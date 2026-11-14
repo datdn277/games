@@ -1,0 +1,22 @@
+{
+  "name": "tho-con-thoat-me-cung",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:source": "node scripts/prepare.mjs",
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/prepare.mjs && node node_modules/vite/bin/vite.js build --config vite.config.js --configLoader runner",
+    "preview": "node node_modules/vite/bin/vite.js preview --host 0.0.0.0 --config vite.config.js --configLoader runner",
+    "test": "node scripts/prepare.mjs && node node_modules/vitest/vitest.mjs run --config vitest.config.js --configLoader runner"
+  },
+  "dependencies": {
+    "three": "0.178.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.178.1",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "3.2.7"
+  }
+}

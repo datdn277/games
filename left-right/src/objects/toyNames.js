@@ -1,0 +1,15 @@
+export const toyNames = Object.freeze({
+  ball: 'quả bóng',
+  car: 'ô tô',
+  gift: 'hộp quà',
+  teddy: 'gấu bông',
+  blocks: 'khối xếp hình',
+  plane: 'máy bay',
+  doll: 'búp bê',
+  apple: 'quả táo',
+  backpack: 'cặp sách',
+  pencilCase: 'hộp bút',
+  milk: 'hộp sữa',
+  bread: 'ổ bánh mì',
+  banana: 'quả chuối',
+});
