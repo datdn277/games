@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f9f6e9" />
+    <meta name="description" content="Cùng Froggy chọn bờ, đếm lá sen và tìm bông sen phép thuật trong trò chơi 3D cho bé 5–6 tuổi." />
+    <title>Ếch tìm lá sen thứ mấy? · Ao Sen Cầu Vồng</title>
+  </head>
+  <body>
+    <div class="page-shell" id="app">
+      <header class="topbar">
+        <button class="brand" type="button" data-action="home" aria-label="Về trang chính của game">
+          <span class="lotus-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Ao Sen Cầu Vồng</span>
+        </button>
+        <div class="topbar-end">
+          <div class="stats" id="stats" hidden>
+            <span id="completed" class="completed"></span>
+            <span class="star-count" id="star-count"></span>
+          </div>
+          <button class="icon-button" id="pause" type="button" data-action="pause" hidden></button>
+          <button class="icon-button" id="sound" type="button" data-action="sound"></button>
+        </div>
+      </header>
+      <main>
+        <section class="menu-panel" id="menu" aria-labelledby="game-title">
+          <div class="menu-content">
+            <p class="eyebrow"><span aria-hidden="true"></span> Trò chơi cho bé 5–6 tuổi</p>
+            <h1 id="game-title" tabindex="-1">Ếch tìm lá sen <em>thứ mấy?</em></h1>
+            <p>Cùng Froggy nhảy qua từng lá sen và tìm bông hoa phép thuật!</p>
+            <div class="menu-actions">
+              <button class="button primary" type="button" data-action="start"><span data-icon="play"></span> Bắt đầu</button>
+              <button class="button secondary" type="button" data-action="levels"><span data-icon="layers"></span> Chọn cấp độ</button>
+            </div>
+            <a class="collection-link" id="collection-link" href="../../index.html" hidden><span data-icon="arrow-left"></span> Kho trò chơi</a>
+          </div>
+          <div class="menu-scene" id="menu-scene">
+            <div class="pond-frame" id="pond-frame">
+              <canvas id="pond" aria-hidden="true"></canvas>
+              <div class="pad-layer" id="pad-layer"></div>
+              <p class="pond-fallback" id="pond-fallback" hidden>Thiết bị chưa hiển thị được cảnh 3D.</p>
+            </div>
+            <div class="scene-caption" aria-hidden="true"><span class="caption-dot"></span> Froggy</div>
+          </div>
+        </section>
+
+        <section class="levels-panel" id="levels" aria-labelledby="levels-title" hidden>
+          <button class="text-button" type="button" data-action="home"><span data-icon="arrow-left"></span> Quay lại</button>
+          <h1 id="levels-title" tabindex="-1">Chọn cấp độ</h1>
+          <div class="level-grid" id="level-grid"></div>
+        </section>
+
+        <section class="game-panel" id="game" aria-labelledby="question-title" hidden>
+          <div class="question-panel" id="question-panel">
+            <div class="ordinal-tile" id="ordinal-tile" aria-hidden="true"></div>
+            <div class="question-copy">
+              <p class="question-level" id="question-level"></p>
+              <h1 id="question-title" tabindex="-1"></h1>
+            </div>
+            <div class="round-progress" id="round-progress" role="img" hidden></div>
+          </div>
+          <div class="game-scene" id="game-scene"></div>
+          <div class="game-dock">
+            <div class="instructions" id="instructions"></div>
+            <div class="game-tools" id="game-tools">
+              <button class="button tool-button" type="button" data-action="listen"><span data-icon="volume"></span> Nghe lại</button>
+              <button class="button tool-button" type="button" data-action="hint"><span data-icon="bulb"></span> Gợi ý</button>
+              <button class="button tool-button" type="button" data-action="reset"><span data-icon="reset"></span> Đếm lại</button>
+            </div>
+          </div>
+          <div class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
