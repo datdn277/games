@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f3f6fc">
+    <meta name="description" content="Bay cùng Bobo, quan sát khối lập phương và khám phá hình nhìn từ trên trong trò chơi 3D cho bé 5–6 tuổi.">
+    <title>Đôi mắt thần kỳ · Look From Above!</title>
+  </head>
+  <body>
+    <div class="shell" id="app">
+      <header class="topbar">
+        <button class="brand" type="button" data-action="home" aria-label="Về trang chính của Đôi mắt thần kỳ">
+          <span class="brand-mark" data-icon="cube"></span><span>Xưởng khối vuông Bobo</span>
+        </button>
+        <div class="top-tools">
+          <span class="progress-total" id="total" hidden></span>
+          <span class="stars" id="stars"></span>
+          <button class="icon-button" id="pause" data-action="pause" type="button" hidden></button>
+          <button class="icon-button" id="sound" data-action="sound" type="button"></button>
+        </div>
+      </header>
+      <main>
+        <section class="menu" id="menu" aria-labelledby="title">
+          <div class="menu-copy">
+            <p class="kicker"><span data-icon="sparkle"></span> Thế giới Khối Vuông Kỳ Diệu</p>
+            <h1 id="title" tabindex="-1">Đôi mắt <em>thần kỳ</em></h1>
+            <p class="intro">Bay lên cùng Bobo và khám phá các khối vuông trông thế nào khi nhìn từ trên cao.</p>
+            <div class="menu-actions">
+              <button class="button primary" type="button" data-action="start"><span data-icon="play"></span> Bắt đầu</button>
+              <button class="button secondary" type="button" data-action="levels"><span data-icon="layers"></span> Chọn cấp độ</button>
+            </div>
+            <a class="collection" id="collection" href="../../index.html" hidden><span data-icon="back"></span> Kho trò chơi</a>
+          </div>
+          <div class="menu-stage" id="menu-stage">
+            <div class="stage-frame" id="stage-frame">
+              <canvas id="studio" aria-hidden="true"></canvas>
+              <p class="webgl-note" id="webgl-note" hidden>Thiết bị này cần WebGL 2 để hiển thị mô hình 3D.</p>
+              <span class="view-tag" id="view-tag" hidden></span>
+            </div>
+          </div>
+        </section>
+        <section class="levels" id="levels" aria-labelledby="levels-title" hidden>
+          <button class="link-button" type="button" data-action="home"><span data-icon="back"></span> Quay lại</button>
+          <h1 id="levels-title" tabindex="-1">Chọn cấp độ</h1>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+        <section class="game" id="game" aria-labelledby="prompt" hidden>
+          <div class="question">
+            <div class="question-icon" id="question-icon" aria-hidden="true"></div>
+            <div class="question-copy">
+              <p class="question-level" id="question-level"></p>
+              <h1 id="prompt" tabindex="-1"></h1>
+            </div>
+            <div class="round-progress" id="round-progress" role="img"></div>
+          </div>
+          <div class="workspace" id="workspace">
+            <div class="model-card" id="model-card">
+              <div class="game-stage" id="game-stage"></div>
+              <div class="camera-tools" id="camera-tools" hidden>
+                <div class="camera-actions">
+                  <button class="button control" type="button" data-action="rotate"><span data-icon="rotate"></span> Xoay hình</button>
+                  <label class="view-picker">
+                    <span class="sr-only">Chọn góc nhìn</span>
+                    <select id="views">
+                      <option value="ISOMETRIC">Nhìn nghiêng</option>
+                      <option value="FRONT">Nhìn từ trước</option>
+                      <option value="LEFT">Nhìn từ trái</option>
+                      <option value="RIGHT">Nhìn từ phải</option>
+                      <option value="FREE_ORBIT">Xoay tự do</option>
+                      <option value="TOP">Nhìn từ trên</option>
+                    </select>
+                  </label>
+                  <div class="zoom-actions">
+                    <button class="button control square" type="button" data-action="zoom-out" aria-label="Thu nhỏ" title="Thu nhỏ"><span data-icon="minus"></span></button>
+                    <button class="button control square" type="button" data-action="zoom-in" aria-label="Phóng to" title="Phóng to"><span data-icon="plus"></span></button>
+                  </div>
+                </div>
+                <label class="angle-control">
+                  <span>Nhìn nghiêng</span>
+                  <input id="tilt" type="range" min="0" max="100" value="0" aria-label="Thay đổi góc nhìn từ nghiêng lên trên">
+                  <span>Từ trên</span>
+                </label>
+              </div>
+            </div>
+            <aside class="activity" id="activity" hidden>
+              <div id="activity-content"></div>
+            </aside>
+          </div>
+          <div class="dock">
+            <div class="instructions" id="instructions"></div>
+            <div class="tools" id="tools" hidden>
+              <button class="button control" type="button" data-action="listen"><span data-icon="volume"></span> Nghe lại</button>
+              <button class="button control" type="button" data-action="hint"><span data-icon="bulb"></span> Gợi ý</button>
+              <button class="button control" type="button" data-action="reset"><span data-icon="reset"></span> Làm lại</button>
+            </div>
+          </div>
+          <div class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
