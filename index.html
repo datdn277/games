@@ -310,6 +310,88 @@
       background: linear-gradient(180deg, #338567, #286b51);
     }
 
+    .game-card.magic-balance::before {
+      background: radial-gradient(circle, rgba(181, 151, 248, 0.62), rgba(181, 151, 248, 0));
+    }
+
+    .magic-balance .icon-wrap {
+      background: linear-gradient(145deg, #fff4cb, #e2d6ff 74%);
+    }
+
+    .magic-balance .badge {
+      background: #eee0fa;
+      color: #603888;
+    }
+
+    .magic-balance .cta {
+      background: linear-gradient(180deg, #8059ae, #5b3c8b);
+    }
+
+    .scale-badge {
+      position: relative;
+      width: 62px;
+      height: 56px;
+      color: #976553;
+    }
+
+    .scale-badge::before,
+    .scale-badge::after,
+    .scale-badge i {
+      content: "";
+      position: absolute;
+      border-radius: 8px;
+    }
+
+    .scale-badge::before {
+      inset: 8px 27px 11px;
+      background: #be9867;
+      box-shadow: inset -2px 0 #916457;
+    }
+
+    .scale-badge::after {
+      inset: auto 12px 5px;
+      height: 10px;
+      background: #a77b69;
+      box-shadow: inset 0 -3px #8b655f;
+    }
+
+    .scale-badge i:nth-child(1) {
+      inset: 15px 4px auto;
+      height: 6px;
+      background: #9b70ac;
+      transform: rotate(-9deg);
+    }
+
+    .scale-badge i:nth-child(2),
+    .scale-badge i:nth-child(3) {
+      width: 23px;
+      height: 24px;
+      background: linear-gradient(115deg, transparent 42%, #aa8266 43% 50%, transparent 51%) 2px 1px / 50% 84% no-repeat,
+        linear-gradient(65deg, transparent 42%, #aa8266 43% 50%, transparent 51%) 9px 1px / 58% 84% no-repeat;
+    }
+
+    .scale-badge i:nth-child(2) { top: 18px; left: 0; }
+    .scale-badge i:nth-child(3) { top: 10px; right: 0; }
+
+    .scale-badge i:nth-child(2)::after,
+    .scale-badge i:nth-child(3)::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 8px;
+      border-radius: 3px 3px 50% 50%;
+      background: #f2bc60;
+      box-shadow: inset 0 -2px #ca8e58;
+    }
+
+    .scale-badge i:nth-child(4) {
+      inset: 10px 25px auto;
+      z-index: 1;
+      height: 12px;
+      background: #ffe69c;
+      box-shadow: inset 0 0 0 2px #a98165;
+    }
+
     .game-card.frog-count::before {
       background: radial-gradient(circle, rgba(111, 207, 215, 0.65), rgba(111, 207, 215, 0));
     }
@@ -769,6 +851,22 @@
       </section>
 
       <section class="grid" aria-label="Danh sách trò chơi">
+        <a class="game-card magic-balance" href="./magic-balance/static/index.html" aria-label="Mở game Chiếc cân thần kỳ">
+          <div class="card-top">
+            <div class="icon-wrap" aria-hidden="true"><span class="scale-badge"><i></i><i></i><i></i><i></i></span></div>
+            <div class="badge">Nặng, nhẹ và thăng bằng</div>
+            <h2>Chiếc cân thần kỳ</h2>
+            <p>Cùng gấu Mimo đặt các bạn thú lên cân 3D, thử thay thế và giải câu đố trong phòng thí nghiệm.</p>
+          </div>
+          <div class="card-bottom">
+            <div class="pill-row" aria-hidden="true">
+              <span class="mini-pill">5–6 tuổi</span>
+              <span class="mini-pill">Game 3D</span>
+            </div>
+            <span class="cta">Vào game <span class="arrow" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+
         <a class="game-card frog-count" href="./frog-count/static/index.html" aria-label="Mở game Ếch tìm lá sen thứ mấy?">
           <div class="card-top">
             <div class="icon-wrap" aria-hidden="true"><span class="pond-badge"><i></i><i></i><i></i></span></div>
