@@ -1,0 +1,15 @@
+.direction-button[aria-disabled="true"] {
+  cursor: default;
+}
+
+.world-fallback {
+  background: linear-gradient(#c0ecf7 65%, #8fcea2 65% 67%, #e8b777 67% 81%, #b8db86 81%);
+}
+
+#app[data-phase="INCORRECT_FEEDBACK"] .mimo-prompt {
+  background-color: #fff0d2;
+}
+
+#app[data-phase="QUESTION_COMPLETE"] .mimo-prompt {
+  background-color: #e7f5e6;
+}

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8e9">
+  <meta name="description" content="Cùng Mimo học đếm thứ tự từ bên trái và bên phải tại Ga Cầu Vồng. Trò chơi 3D cho bé 5–6 tuổi.">
+  <link rel="icon" href="./train-badge.svg" type="image/svg+xml">
+  <title>Đoàn tàu muông thú – Bé đếm từ đâu?</title>
+  <script type="module" crossorigin src="./assets/index-BBht_z7P.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/three-DaZl1qAr.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-BsjHugi9.css">
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-train" viewBox="0 0 24 24"><path d="M5 14h14m-4-9H9m-3 14-2 2m14-2 2 2M6 5.5C6 4.1 7.1 3 8.5 3h7C16.9 3 18 4.1 18 5.5V15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3ZM6 8h12v4H6z"/><path d="M9 15h.01m5.99 0h.01"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4Zm4 4a4 4 0 0 1 0 6m2.7-8.7a8 8 0 0 1 0 11.4"/></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4Zm5 4 5 6m0-6-5 6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z" fill="currentColor"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M20 12H4m7-7-7 7 7 7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M4 12h16m-7-7 7 7-7 7"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10m-9 10v-6h4v6"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14m6-14v14" stroke-width="3.4"/></symbol>
+    <symbol id="i-replay" viewBox="0 0 24 24"><path d="M5 11a7 7 0 1 1 1.8 6m-2-11v5h5"/></symbol>
+    <symbol id="i-tip" viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4M8.8 15c0-1.7-2.8-2.6-2.8-6a6 6 0 1 1 12 0c0 3.4-2.8 4.3-2.8 6z"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 22V3m0 1c6-5 8 4 14 0v10c-6 4-8-5-14 0"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M21 10V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v4a2 2 0 1 1 0 4v4a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-4a2 2 0 1 1 0-4Zm-6-3v1m0 3v2m0 3v1"/></symbol>
+  </svg>
+
+  <main id="app" data-screen="menu">
+    <header id="menu-header" class="menu-header">
+      <div class="menu-header-inner">
+        <div class="brand">
+          <span class="brand-tile"><svg class="icon" aria-hidden="true"><use href="#i-train"></use></svg></span>
+          <span>Ga Cầu Vồng</span>
+        </div>
+        <nav class="menu-nav" aria-label="Điều hướng">
+          <a id="catalog-link" href="../"><svg class="icon" aria-hidden="true"><use href="#i-left"></use></svg> Kho trò chơi</a>
+          <button id="menu-sound" class="icon-button" type="button" aria-label="Tắt âm thanh" aria-pressed="true" title="Âm thanh"><svg class="icon" aria-hidden="true"><use href="#i-sound"></use></svg></button>
+        </nav>
+      </div>
+    </header>
+
+    <section id="screen-menu" class="menu-intro" aria-labelledby="menu-title">
+      <div class="menu-ticket"><svg class="icon" aria-hidden="true"><use href="#i-ticket"></use></svg> Vé cho bé 5–6 tuổi</div>
+      <h1 id="menu-title" tabindex="-1">Đoàn tàu<br> muông thú</h1>
+      <p class="menu-subtitle">Bé đếm từ đâu?</p>
+      <p class="menu-description">Cùng Mimo tìm đầu hàng và đếm từng bạn thú trước khi tàu khởi hành!</p>
+      <div class="menu-actions">
+        <button id="start" class="button button-primary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg> Bắt đầu</button>
+        <button id="choose-level" class="button button-paper" type="button"><svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg> Chọn cấp độ</button>
+      </div>
+    </section>
+
+    <section id="screen-levels" class="levels-screen" aria-labelledby="levels-title">
+      <button id="levels-back" class="button button-paper levels-back" type="button"><svg class="icon" aria-hidden="true"><use href="#i-left"></use></svg> Về menu</button>
+      <div class="levels-heading">
+        <div class="section-sticker" aria-hidden="true"><svg class="icon"><use href="#i-ticket"></use></svg></div>
+        <h1 id="levels-title" tabindex="-1">Chọn chặng tàu</h1>
+        <p>Cùng Mimo đi qua 5 chặng để tập đếm nhé!</p>
+      </div>
+      <div id="level-list" class="level-list"></div>
+    </section>
+
+    <section id="screen-play" class="play-intro" aria-labelledby="question">
+      <div class="game-bar">
+        <button id="home" class="icon-button" type="button" aria-label="Về menu" title="Về menu"><svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg></button>
+        <div class="mission-progress">
+          <div class="mission-title"><strong id="level-label">Chặng 1</strong><span id="progress-label">1 / 5</span></div>
+          <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+        </div>
+        <div class="star-counter"><svg class="icon star" aria-hidden="true"><use href="#i-star"></use></svg><span id="star-count">0</span><span class="sr-only"> sao</span></div>
+        <div class="game-bar-actions">
+          <button id="sound" class="icon-button" type="button" aria-label="Tắt âm thanh" aria-pressed="true" title="Âm thanh"><svg class="icon" aria-hidden="true"><use href="#i-sound"></use></svg></button>
+          <button id="pause" class="icon-button" type="button" aria-label="Tạm dừng" title="Tạm dừng"><svg class="icon" aria-hidden="true"><use href="#i-pause"></use></svg></button>
+        </div>
+      </div>
+      <div class="question-card">
+        <h1 id="question" tabindex="-1">Bé đếm từ đâu?</h1>
+        <div class="question-chips">
+          <span id="question-ordinal" class="question-chip ordinal-chip" hidden></span>
+          <span id="question-direction" class="question-chip direction-chip" hidden></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-result" class="result-screen" aria-labelledby="result-title">
+      <div class="section-sticker result-sticker" aria-hidden="true"><svg class="icon star"><use href="#i-star"></use></svg></div>
+      <h1 id="result-title" tabindex="-1">Tuyệt vời, bé ơi!</h1>
+      <p id="result-text">Đoàn tàu sắp khởi hành rồi!</p>
+      <div id="result-stars" class="result-stars"></div>
+      <div id="comparison" class="comparison" hidden>
+        <strong id="comparison-ordinal" class="comparison-ordinal"></strong>
+        <div class="comparison-card comparison-from-left">
+          <span><svg class="icon" aria-hidden="true"><use href="#i-left"></use></svg> Từ bên trái</span>
+          <strong id="comparison-left"></strong>
+        </div>
+        <div class="comparison-card comparison-from-right">
+          <span>Từ bên phải <svg class="icon" aria-hidden="true"><use href="#i-right"></use></svg></span>
+          <strong id="comparison-right"></strong>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button id="play-next" class="button button-primary" type="button">Chơi tiếp <svg class="icon" aria-hidden="true"><use href="#i-right"></use></svg></button>
+        <button id="replay" class="button button-paper" type="button"><svg class="icon" aria-hidden="true"><use href="#i-replay"></use></svg> Chơi lại</button>
+        <button id="result-home" class="button button-quiet" type="button"><svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg> Về menu</button>
+      </div>
+    </section>
+
+    <div id="stage-frame" class="stage-frame">
+      <div class="stage">
+        <div id="world"></div>
+        <div id="animal-markers" role="group" aria-label="Hàng động vật"></div>
+        <p id="world-status" class="world-status" role="status" hidden></p>
+        <div id="direction-arrow" class="direction-arrow" data-direction="left" aria-hidden="true" hidden><svg class="icon"><use href="#i-right"></use></svg></div>
+        <div id="start-flag" class="start-flag" data-direction="left" aria-hidden="true" hidden><svg class="icon"><use href="#i-flag"></use></svg></div>
+        <div id="direction-controls" class="direction-controls" role="group" aria-label="Chọn đầu hàng" hidden>
+          <button id="choose-left" class="button direction-button direction-left" type="button"><svg class="icon" aria-hidden="true"><use href="#i-left"></use></svg><svg class="icon direction-flag" aria-hidden="true"><use href="#i-flag"></use></svg> Bên trái</button>
+          <button id="choose-right" class="button direction-button direction-right" type="button">Bên phải <svg class="icon direction-flag" aria-hidden="true"><use href="#i-flag"></use></svg><svg class="icon" aria-hidden="true"><use href="#i-right"></use></svg></button>
+        </div>
+      </div>
+      <div class="station-caption" aria-hidden="true"><span></span> Ga Cầu Vồng <span></span></div>
+    </div>
+
+    <section id="play-footer" class="play-footer" aria-label="Mimo hướng dẫn">
+      <div class="mimo-prompt">
+        <div class="mimo-tag" aria-hidden="true">M</div>
+        <div class="mimo-message">
+          <div id="step-label" class="step-label">Mimo</div>
+          <p id="instruction" aria-live="polite"></p>
+        </div>
+        <div id="count-progress" class="count-progress" aria-label="Các số đã đếm" hidden></div>
+      </div>
+      <div id="play-comparison" class="comparison play-comparison" hidden>
+        <strong id="play-comparison-ordinal" class="comparison-ordinal"></strong>
+        <div class="comparison-card comparison-from-left">
+          <span><svg class="icon" aria-hidden="true"><use href="#i-left"></use></svg> Từ bên trái</span>
+          <strong id="play-comparison-left"></strong>
+        </div>
+        <div class="comparison-card comparison-from-right">
+          <span>Từ bên phải <svg class="icon" aria-hidden="true"><use href="#i-right"></use></svg></span>
+          <strong id="play-comparison-right"></strong>
+        </div>
+      </div>
+      <div class="play-actions">
+        <button id="retry-speech" class="button button-paper" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sound"></use></svg> Nghe lại</button>
+        <button id="hint" class="button button-hint" type="button"><svg class="icon" aria-hidden="true"><use href="#i-tip"></use></svg> Gợi ý</button>
+        <button id="continue" class="button button-primary" type="button" hidden>Tiếp theo <svg class="icon" aria-hidden="true"><use href="#i-right"></use></svg></button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="pause-dialog" aria-labelledby="pause-title">
+    <div class="section-sticker" aria-hidden="true"><svg class="icon"><use href="#i-pause"></use></svg></div>
+    <h2 id="pause-title">Tàu nghỉ một chút</h2>
+    <p>Mimo sẽ đợi bé ở sân ga.</p>
+    <div class="dialog-actions">
+      <button id="resume" class="button button-primary" type="button" autofocus><svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg> Chơi tiếp</button>
+      <button id="pause-replay" class="button button-paper" type="button"><svg class="icon" aria-hidden="true"><use href="#i-replay"></use></svg> Chơi lại chặng</button>
+      <button id="pause-home" class="button button-quiet" type="button"><svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg> Về menu</button>
+    </div>
+  </dialog>
+
+  <dialog id="tutorial-dialog" aria-labelledby="tutorial-title">
+    <button id="tutorial-close" class="icon-button dialog-close" type="button" aria-label="Đóng hướng dẫn"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg></button>
+    <div class="section-sticker" aria-hidden="true"><svg class="icon"><use href="#i-flag"></use></svg></div>
+    <h2 id="tutorial-title">Chào bé, mình là Mimo!</h2>
+    <p>Đầu tiên, bé chọn bên trái hoặc bên phải. Rồi chạm từng bạn thú theo thứ tự, đến số Mimo hỏi thì dừng nhé!</p>
+    <button id="tutorial-start" class="button button-primary" type="button"><svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg> Cùng chơi</button>
+  </dialog>
+
+</body>
+</html>
